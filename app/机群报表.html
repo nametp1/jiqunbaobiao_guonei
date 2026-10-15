@@ -248,7 +248,7 @@ function rep2match(r, kw) {
 /* ==================== 渲染：报表清单（平铺，无分类） ==================== */
 function renderCard(rep) {
     return `
-        <div class="card report-card" onclick="openReport('${rep.name}')">
+        <div class="card report-card" onclick="openReport('${rep.name}','${rep.scope}')">
             <div class="rc-icon">${ICONS[rep.icon] || ICONS.summary}</div>
             <div class="rc-body">
                 <div class="rc-name">${rep.name}</div>
@@ -291,10 +291,13 @@ function renderAll() {
 }
 
 /* ==================== 交互 ==================== */
-/* 2026-10-08（方案 A）：去掉卡片上的「预览 / 添加」按钮，点击卡片直接进入机群数据页 */
-/* 点卡片 = 访问这张报表：把报表名带过去，落地页顶栏标题就显示它 */
-function openReport(name) {
-    location.href = '机群数据-单机.html' + (name ? '?report=' + encodeURIComponent(name) : '');
+/* 2026-10-08（方案 A）：去掉卡片上的「预览 / 添加」按钮，点击卡片直接进入数据页 */
+/* 点卡片 = 访问这张报表：按卡片口径分流，报表名带过去，落地页顶栏标题就显示它
+   —— 单机卡片 → 机群数据-单机.html；机群卡片（切到「仅看机群」看到的那些）→ 机群数据-机群.html
+   （2026-10-15 用户要求：两侧数据各自落到对应数据页，不再统一进单机页） */
+function openReport(name, scope) {
+    const page = (scope === '机群') ? '机群数据-机群.html' : '机群数据-单机.html';
+    location.href = page + (name ? '?report=' + encodeURIComponent(name) : '');
 }
 
 /* 返回上一页（无历史记录时只提示一下） */
