@@ -669,97 +669,6 @@
         .more-form-tip.error   { display: block; color: #E60012; }
         .more-form-tip.success { display: block; color: #52c41a; }
 
-        /* 邮件预览区 */
-        .email-preview {
-            border: none;
-            background: #f9f9fb;
-        }
-        .email-preview-header {
-            background: #f5f5f5;
-            padding: 12px 20px;
-            font-size: 12px;
-            color: #999;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            border-bottom: 1px solid #e8e8e8;
-        }
-        .email-preview-header .ph-row {
-            display: flex;
-            gap: 8px;
-        }
-        .email-preview-header .ph-label {
-            color: #666;
-            min-width: 48px;
-            text-align: right;
-            flex-shrink: 0;
-        }
-        .email-preview-header .ph-value {
-            color: #333;
-            font-weight: 500;
-        }
-        .email-preview-body {
-            padding: 24px 28px;
-            font-size: 13px;
-            color: #333;
-            line-height: 1.8;
-            max-height: 480px;
-            overflow-y: auto;
-            background: #fff;
-        }
-        .email-preview-body .report-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #E60012;
-            text-align: center;
-            margin-bottom: 6px;
-        }
-        .email-preview-body .report-subtitle {
-            font-size: 12px;
-            color: #999;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .email-preview-body .report-section {
-            margin-bottom: 16px;
-        }
-        .email-preview-body .report-section h4 {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-            padding-left: 8px;
-            border-left: 3px solid #E60012;
-        }
-        .email-preview-body table {
-            width: 100%;
-            margin: 12px 0;
-            font-size: 12px;
-            border-collapse: collapse;
-        }
-        .email-preview-body table th {
-            background: #f5f5f5;
-            padding: 8px 10px;
-            text-align: center;
-            font-weight: 500;
-            color: #555;
-            border: 1px solid #e8e8e8;
-        }
-        .email-preview-body table td {
-            padding: 7px 10px;
-            text-align: center;
-            border: 1px solid #e8e8e8;
-            color: #333;
-        }
-        .email-footer {
-            margin-top: 20px;
-            padding-top: 12px;
-            border-top: 1px solid #f0f0f0;
-            font-size: 11px;
-            color: #bbb;
-            text-align: center;
-            line-height: 1.8;
-        }
 
         /* 报告头部信息 */
         .report-header {
@@ -1522,6 +1431,27 @@
         .badge-single { background: #e6f7ff; color: #1890ff; }
         .badge-fleet  { background: #fff7e6; color: #fa8c16; }
 
+        /* ===== 报表预览（页内直接看图表报表模版；侧边栏 / 顶栏保持不动） ===== */
+        .preview-bar {
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+            padding: 10px 16px; background: #fafbfc; border-bottom: 1px solid #eef0f3;
+        }
+        .preview-bar .btn-back {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; padding: 0; flex-shrink: 0;
+            font-size: 16px; line-height: 1; font-family: inherit; color: #5a6472; background: #fff;
+            border: 1px solid #e3e5ea; border-radius: 6px; cursor: pointer; transition: all .15s;
+        }
+        .preview-bar .btn-back:hover { color: #E60012; border-color: #f6a8ae; }
+        .preview-bar .pt-name { font-size: 14px; font-weight: 600; color: #222; }
+        .preview-bar .pt-actions { margin-left: auto; }
+        .preview-bar .pt-actions a { font-size: 12px; color: #1890ff; text-decoration: none; }
+        .preview-bar .pt-actions a:hover { text-decoration: underline; }
+        .preview-frame {
+            display: block; width: 100%; height: calc(100vh - 210px); min-height: 620px;
+            border: none; background: #eef1f5;
+        }
+
         /* 嵌入预览模式（?embed=1）：只留内容区，隐藏左侧菜单与新手引导 */
         html.embed .sidebar { display: none; }
         html.embed .main-content { padding: 16px 20px 24px; }
@@ -1615,7 +1545,7 @@
             </aside>
             <main class="main-content">
                 <div class="container">
-                    <div class="page-card">
+                    <div class="page-card" id="listCard">
             <!-- 工具栏 -->
             <div class="toolbar">
                 <div class="toolbar-left">
@@ -1665,6 +1595,16 @@
                 <div class="empty-state"><div class="empty-text">加载中...</div></div>
             </div>
         </div>
+
+                    <!-- ===== 报表预览：点报表卡片直接在页内看图表报表模版；侧边栏保持不动 ===== -->
+                    <div class="page-card" id="previewCard" style="display:none;">
+                        <div class="preview-bar">
+                            <button class="btn-back" id="previewBack" type="button" title="返回报表列表" aria-label="返回报表列表">‹</button>
+                            <span class="pt-name" id="previewName">—</span>
+                            <span class="pt-actions"><a id="previewOpenNew" href="#" target="_blank" rel="noopener">在新窗口打开 ↗</a></span>
+                        </div>
+                        <iframe id="previewFrame" class="preview-frame" title="报表预览"></iframe>
+                    </div>
     </div>
 
 
@@ -1722,7 +1662,7 @@
          图片取不到时回落到内置静态图，避免出现只有灰底的弹窗 -->
     <div id="reportPreview" onclick="hideReportPreview()">
         <img id="reportPreviewImg" alt=""
-             onerror="if(this.getAttribute('src')!=='预览图/默认预览.png'){this.src='预览图/默认预览.png'}">
+             onerror="if(this.getAttribute('src')!=='默认底图@2x.png'){this.src='默认底图@2x.png'}">
     </div>
 
     <script>
@@ -1920,7 +1860,7 @@
         // ====================================================================
         function renderCard(rep) {
             return `
-                <div class="dim-card-unified${rep.metrics.length ? '' : ' is-disabled'}" data-key="${rep.key}" title="点击查看报表预览">
+                <div class="dim-card-unified${rep.metrics.length ? '' : ' is-disabled'}" data-key="${rep.key}" title="点击查看该口径的数据示例">
                     <div class="card-body">
                         <div class="card-head-row">
                             <div class="card-icon dim-icon-summary">${ICONS[rep.icon] || ICONS.summary}</div>
@@ -1937,7 +1877,7 @@
 
         function renderListItem(rep) {
             return `
-                <div class="dim-list-item${rep.metrics.length ? '' : ' is-disabled'}" data-key="${rep.key}" title="点击查看报表预览">
+                <div class="dim-list-item${rep.metrics.length ? '' : ' is-disabled'}" data-key="${rep.key}" title="点击查看该口径的数据示例">
                     <div class="list-icon dim-icon-summary">${ICONS[rep.icon] || ICONS.summary}</div>
                     <div class="list-info">
                         <div class="list-name">${rep.name}</div>
@@ -2045,13 +1985,50 @@
         syncScopeChips();   /* 进页面默认选中「仅看单机」 */
 
         // ====================================================================
-        // 卡片 / 列表行点击：直接查看报表预览
-        // （原「预览 / 添加」两个按钮已去掉：点整卡即预览；要添加报表走预览弹窗里的「使用该报表」）
+        // 卡片 / 列表行点击：按报表口径跳到对应的图表报表模版
+        // 2026-10-16 用户要求：单机口径 → 单机图表报表模版.html；机群口径 → 机群图表报表模版.html
+        // （原「点整卡看预览弹窗」的入口因此取消，预览弹窗代码保留但暂无入口）
         // ====================================================================
         templateContent.addEventListener('click', function (e) {
             const item = e.target.closest('.dim-card-unified, .dim-list-item');
             if (!item || !item.dataset.key) return;
-            openPreviewModal(item.dataset.key);
+            const rep = reports.filter(function (r) { return r.key === item.dataset.key; })[0];
+            if (!rep) return;
+            openReportPreview(rep);
+        });
+
+        /* ====================================================================
+           报表预览：点报表卡片 → 在页内直接预览对应的图表报表模版（侧边栏保持不动）
+           2026-10-16：原先是 location.href 跳到单页，现在改成主内容区内的 iframe 预览，
+           仍保留「在新窗口打开」；点「返回报表列表」或按 Esc 回到列表。
+           ==================================================================== */
+        var listCard = document.getElementById('listCard');
+        var previewCard = document.getElementById('previewCard');
+        var previewFrame = document.getElementById('previewFrame');
+
+        function openReportPreview(rep) {
+            var isFleet = (rep.scope === '机群');
+            var file = isFleet ? '机群图表报表模版.html' : '单机图表报表模版.html';
+            document.getElementById('previewName').textContent = rep.name;   /* 报表名放在返回图标后面 */
+            document.getElementById('previewOpenNew').setAttribute('href', file);
+            /* 页内预览带 ?embed=1：模版页会隐藏自己的顶部栏 / 侧边栏，避免与本页外壳叠成两层
+               （「在新窗口打开」用不带参数的地址，独立打开时保留完整外壳） */
+            previewFrame.setAttribute('src', file + '?embed=1&report=' + encodeURIComponent(rep.name));
+            listCard.style.display = 'none';
+            previewCard.style.display = '';
+            var mc = document.querySelector('.main-content');
+            if (mc) mc.scrollTop = 0;
+        }
+        function closeReportPreview() {
+            previewCard.style.display = 'none';
+            previewFrame.setAttribute('src', '');      // 清掉 iframe，避免后台继续占资源
+            listCard.style.display = '';
+            var mc = document.querySelector('.main-content');
+            if (mc) mc.scrollTop = 0;
+        }
+        document.getElementById('previewBack').addEventListener('click', closeReportPreview);
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && previewCard.style.display !== 'none') closeReportPreview();
         });
 
         // ====================================================================
@@ -2255,24 +2232,20 @@
         // ====================================================================
         // 「我需要更多报表」诉求弹窗
         // ====================================================================
+        /* 2026-10-16：预览图/ 目录已删除，候选报表不再逐张配图 —— 一律用下面的默认底图
+           （候选项若要单独配图，仍可写 image 字段，或由后台配置下发，后者优先） */
         const MORE_REPORT_OPTIONS = [
             { name: '超时工作报表',
-              image: '预览图/超时工作报表.png',
               desc: '统计设备超过设定工时阈值的时长、次数与占比，用于识别加班与合规风险。' },
             { name: '设备异常通知报表',
-              image: '预览图/设备异常通知报表.png',
               desc: '汇总异常事件的即时通知记录与处理情况：异常类型、发生时间、通知对象与处理状态。' },
             { name: '电池电量报表',
-              image: '预览图/电池电量报表.png',
               desc: '统计设备 / 机群的电池荷电状态（SOC）与充电情况：期末 SOC、最低 SOC、充电次数与充电时长。' },
             { name: '碳排放报表',
-              image: '预览图/碳排放报表.png',
               desc: '把燃油 / 电能消耗折算为碳排放量，支持按项目、机型、周期统计，用于 ESG 与绿色施工汇报。' },
             { name: '驾驶员行为评分报表',
-              image: '预览图/驾驶员行为评分报表.png',
               desc: '按急加速、急刹车、超速、怠速等事件给出机手的行为评分与排名，便于考核与培训。' },
             { name: '备件与保养消耗报表',
-              image: '预览图/备件与保养消耗报表.png',
               desc: '统计保养、维修产生的备件消耗与费用，按设备、项目与周期汇总。' }
         ];
 
@@ -2281,8 +2254,9 @@
         // 无配置 / 配置异常时回落到上面的内置默认清单
         const REPORT_OPTIONS_KEY = 'mysany_more_report_options';
 
-        // 没配预览图（或图片加载失败）时用的内置静态图：保证每行都有一张真图可点开放大，不出灰色空窗
-        const DEFAULT_PREVIEW_IMAGE = '预览图/默认预览.png';
+        // 没配预览图（或图片加载失败）时用的默认底图：保证每行都有一张真图可点开放大，不出破图空窗
+        // （2026-10-16 起改用同目录的 默认底图@2x.png —— 原 预览图/ 目录已删除）
+        const DEFAULT_PREVIEW_IMAGE = '默认底图@2x.png';
         // 图片加载失败时的兜底（内联到 img 的 onerror）
         const IMG_FALLBACK = "if(this.getAttribute('src')!=='" + DEFAULT_PREVIEW_IMAGE + "'){this.src='" + DEFAULT_PREVIEW_IMAGE + "'}";
 

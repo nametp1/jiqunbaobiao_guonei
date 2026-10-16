@@ -211,23 +211,6 @@
         .var-tag code { font-family: monospace; font-size: 10px; }
         .var-tag.table-var { font-size: 10px; padding: 2px 6px; }
 
-        .var-hint-box {
-            background: #fffbe6; border: 1px solid #ffe58f; border-radius: 6px;
-            padding: 10px 14px; margin-bottom: 16px; font-size: 12px; color: #8c6d00;
-            line-height: 2.2;
-        }
-        .clickable-var {
-            display: inline-block; padding: 1px 6px;
-            background: #fff; border: 1px solid #d9d9d9; border-radius: 3px;
-            font-family: 'SF Mono','Menlo',monospace; font-size: 11px; color: #24839B;
-            cursor: pointer; transition: all 0.15s;
-            margin: 0 1px; user-select: none;
-        }
-        .clickable-var:hover {
-            background: #24839B; color: #fff; border-color: #29BECE;
-        }
-        .clickable-var:active { transform: scale(0.95); }
-
         /* 步骤Tab切换 */
         .step-tabs {
             display: flex; gap: 0; margin-bottom: 16px;
@@ -246,7 +229,7 @@
         .step-panel { animation: fadeIn 0.25s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ===== 三步向导（步骤条 / 每步口径勾选 / 跳过） ===== */
+        /* ===== 向导（步骤条 / 每步口径勾选 / 跳过；2026-10-16 起为两步） ===== */
         .wizard-steps { display: flex; align-items: stretch; gap: 6px; margin-bottom: 10px; }
         .wz-step {
             flex: 1; display: flex; align-items: center; gap: 10px; text-align: left;
@@ -283,10 +266,6 @@
         .step-skip-note button:hover { border-color: #29BECE; color: #24839B; }
         .modal-footer.wz-footer { justify-content: space-between; }
         .wz-foot-left, .wz-foot-right { display: flex; align-items: center; gap: 8px; }
-
-        /* 正文编辑器（全宽） */
-        .body-editor-full { margin-top: 12px; }
-        .body-editor-full label { font-size: 13px; font-weight: 600; color: #333; display: block; margin-bottom: 6px; }
 
         /* 附件配置区 */
         .attachment-section {
@@ -541,42 +520,6 @@
             padding: 40px 20px; color: #bfbfbf; font-size: 13px; height: 100%;
         }
 
-        /* Quill 富文本编辑器 */
-        #editor-container { border: 1px solid #d9d9d9; border-radius: 6px; overflow: hidden; }
-        #editor-container:focus-within { border-color: #29BECE; }
-        .ql-container { font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; border: none !important; }
-        .ql-toolbar { border: none !important; border-bottom: 1px solid #e8e8e8 !important; background: #fafafa; }
-        .ql-editor { min-height: 280px; line-height: 1.8; }
-        .ql-editor p { line-height: 1.8; }
-
-        /* v2.0 调整：正文内容支持「HTML 源码」模式（代码输入） */
-        .body-editor-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-        .body-editor-head label { margin-bottom: 0 !important; }
-        .body-editor-modes { display: inline-flex; padding: 2px; background: #f2f2f2; border-radius: 6px; }
-        .body-editor-modes .be-mode-btn {
-            border: none; background: transparent; cursor: pointer; font-family: inherit;
-            font-size: 12px; color: #666; padding: 4px 12px; border-radius: 4px; line-height: 18px;
-        }
-        .body-editor-modes .be-mode-btn.active { background: #fff; color: #24839B; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-        .code-textarea {
-            width: 100%; min-height: 280px; box-sizing: border-box;
-            border: 1px solid #d9d9d9; border-radius: 6px; padding: 12px;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace;
-            font-size: 12.5px; line-height: 1.6; color: #333; background: #fcfcfc;
-            resize: vertical; outline: none; tab-size: 2;
-        }
-        .code-textarea:focus { border-color: #29BECE; background: #fff; }
-        .code-hint { margin-top: 8px; font-size: 12px; color: #8c8c8c; line-height: 1.6; }
-        /* Quill 变量样式 */
-        .ql-variable {
-            background: rgba(41,190,206,.12); border: 1px solid rgba(41,190,206,.45); color: #24839B;
-            border-radius: 3px; padding: 1px 4px; font-size: 0.9em;
-            font-family: 'Consolas','Monaco',monospace; white-space: nowrap;
-        }
-        .ql-editor .ql-variable:before { content: '{{'; }
-        .ql-editor .ql-variable:after  { content: '}}'; }
-        .ql-editor .ql-variable b { font-weight: inherit; }
-
         /* 变量标签列表（附件配置中使用） */
         .tb-var-list {
             display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
@@ -648,9 +591,6 @@
         }
         .tb-col-add:hover { color: #226884; background: rgba(41,190,206,.12); }
 
-        .status-error { color: #24839B; font-weight: 600; }
-        .section-divider { border: none; border-top: 1px dashed #e8e8e8; margin: 16px 0; }
-        .email-footer { text-align: center; font-size: 11px; color: #bbb; margin-top: 24px; padding-top: 16px; border-top: 1px solid #f0f0f0; }
         .var-hl { background: #fff3cd; padding: 1px 3px; border-radius: 2px; font-family: monospace; font-size: 12px; }
 
         /* 切换开关 */
@@ -1024,51 +964,16 @@
         .pdfpick-btn.primary:hover { background: #226884; color: #fff; }
 
 
-        /* 预览与测试 */
-        .preview-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+        /* 预览与测试（邮件预览相关样式已于 2026-10-16 随功能删除） */
         .view-switch { display: inline-flex; padding: 3px; background: #f2f2f2; border-radius: 7px; }
         .view-switch button {
             padding: 6px 14px; border: none; background: transparent; border-radius: 5px;
             font-size: 12px; color: #666; cursor: pointer; font-family: inherit;
         }
         .view-switch button.active { background: #fff; color: #24839B; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-        .preview-stage { background: #eef1f5; border: 1px solid #e8e8e8; border-radius: 8px; padding: 18px; display: flex; justify-content: center; }
-        .email-frame {
-            width: 600px; background: #fff; border-radius: 4px; overflow: hidden;
-            box-shadow: 0 3px 14px rgba(0,0,0,.1); transition: width .2s;
-        }
-        .email-frame.mobile { width: 375px; }
-        .email-frame.dark { background: #1f1f1f; color: #e8e8e8; }
-        .email-frame.strip { border: 2px dashed #29BECE; }
-        .email-brand-bar { background: #24839B; color: #fff; padding: 12px 16px; font-size: 14px; font-weight: 700; }
-        .email-frame.dark .email-brand-bar { background: #7a0009; }
-        .email-body { padding: 16px; font-size: 13px; line-height: 1.8; color: #333; }
-        .email-frame.dark .email-body { color: #ddd; }
-        .email-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
-        .email-metric { background: #f5f7fa; border-radius: 8px; padding: 10px 12px; }
-        .email-frame.dark .email-metric { background: #2a2a2a; }
-        .email-metric .l { font-size: 11px; color: #888; }
-        .email-metric .n { font-size: 18px; font-weight: 700; color: #24839B; margin-top: 2px; }
-        .email-btn {
-            display: inline-block; padding: 11px 28px; background: #24839B; color: #fff;
-            border-radius: 6px; font-size: 13px; font-weight: 600; text-decoration: none;
-        }
-        .email-frame.strip .email-btn { background: #999; }
-        .email-mini-table { width: 100%; border-collapse: collapse; font-size: 11px; margin: 10px 0; }
-        .email-mini-table th { background: #f5f7fa; color: #555; padding: 6px; text-align: left; }
-        .email-mini-table td { padding: 6px; border-bottom: 1px solid #f0f0f0; }
-        .email-foot { padding: 12px 16px; border-top: 1px solid #f0f0f0; color: #999; font-size: 11px; }
-        .preview-strip-note { margin-top: 10px; font-size: 11px; color: #24839B; display: none; }
-        .email-frame.strip + .preview-strip-note { display: block; }
 
         .pdf-preview-stage { background: #eef1f5; border: 1px solid #e8e8e8; border-radius: 8px; padding: 18px; overflow: auto; }
-        .compat-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
-        .compat-table th { background: #fafafa; color: #555; padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
-        .compat-table td { padding: 8px; border-bottom: 1px solid #f5f5f5; color: #555; }
-        .ok-mark { color: #389e0d; }
-        .warn-mark { color: #d48806; }
     </style>
-    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
 </head>
 <body>
 <div class="app-wrapper">
@@ -1192,7 +1097,7 @@
                         <span class="switch-state" id="edit-tpl-enabled-state">已启用</span>
                     </div>
                 </div>
-                <!-- 整体口径：作用于整份报表（第 2 步数据列 + 第 3 步 PDF 版式共用） -->
+                <!-- 整体口径：作用于整份报表（XLSX/CSV 数据列 + PDF 版式共用） -->
                 <div class="form-group">
                     <label>整体口径</label>
                     <div class="view-switch seg-scope" id="edit-scope-tabs">
@@ -1211,60 +1116,23 @@
                 </div>
             </div>
 
-            <!-- 步骤向导：1 邮件正文（必填）· 2 XLSX/CSV 附件（可跳过）· 3 PDF 附件（可跳过） -->
+            <!-- 步骤向导：第 1 步 XLSX/CSV 附件（可跳过）· 第 2 步 PDF 附件（最后一步）
+                 2026-10-16：按需求删除「邮件正文」步骤与全部邮件相关功能，向导由三步改为两步。
+                 注意 data-step / wzState 编号沿用内部步骤号（2＝附件、3＝PDF），界面显示为第 1 / 2 步。 -->
             <div class="wizard-steps" id="wizardSteps">
-                <button type="button" class="wz-step active" data-step="1" onclick="switchStep(1)">
+                <button type="button" class="wz-step active" data-step="2" onclick="switchStep(2)">
                     <span class="wz-idx">1</span>
-                    <span class="wz-body"><span class="wz-name">邮件正文</span><span class="wz-state req" id="wzState1">必填</span></span>
-                </button>
-                <span class="wz-arrow">›</span>
-                <button type="button" class="wz-step" data-step="2" onclick="switchStep(2)">
-                    <span class="wz-idx">2</span>
                     <span class="wz-body"><span class="wz-name">XLSX / CSV 附件</span><span class="wz-state" id="wzState2">未配置</span></span>
                 </button>
                 <span class="wz-arrow">›</span>
                 <button type="button" class="wz-step" data-step="3" onclick="switchStep(3)">
-                    <span class="wz-idx">3</span>
+                    <span class="wz-idx">2</span>
                     <span class="wz-body"><span class="wz-name">PDF 附件</span><span class="wz-state" id="wzState3">未配置</span></span>
                 </button>
             </div>
 
-            <!-- 步骤1：邮件正文 -->
-            <div class="step-panel" id="step-body">
-
-                <!-- 变量提示 -->
-                <div class="var-hint-box" id="edit-var-hint">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                        <strong>可用变量：</strong>
-                    </div>
-                    <span style="font-size:12px;color:#8c6d00;">点击下方变量即可插入到正文光标处，发送时将自动替换</span><br>
-                    <strong>基础信息：</strong><span class="clickable-var" onclick="insertVarEdit('{{模版名称}}')">{{模版名称}}</span> <span class="clickable-var" onclick="insertVarEdit('{{发送日期}}')">{{发送日期}}</span> <span class="clickable-var" onclick="insertVarEdit('{{收件人姓名}}')">{{收件人姓名}}</span> <span class="clickable-var" onclick="insertVarEdit('{{生成时间}}')">{{生成时间}}</span> <span class="clickable-var" onclick="insertVarEdit('{{一键退订}}')">{{一键退订}}</span> <span class="clickable-var" onclick="insertVarEdit('{{查看报告}}')">{{查看报告}}</span>
-                </div>
-
-                <!-- 富文本编辑器（全宽）｜v2.0 调整：支持切到「HTML 源码」直接输入代码 -->
-                <div class="body-editor-full">
-                    <div class="body-editor-head">
-                        <label>正文内容 <span class="required">*</span></label>
-                        <div class="body-editor-modes" id="body-editor-modes">
-                            <button type="button" class="be-mode-btn active" data-mode="rich" onclick="switchBodyMode('rich')">富文本</button>
-                            <button type="button" class="be-mode-btn" data-mode="code" onclick="switchBodyMode('code')">&lt;/&gt; HTML 源码</button>
-                        </div>
-                    </div>
-                    <div class="form-hint" style="margin-bottom:8px;">点击上方黄色区域中的变量标签即可插入到光标位置，也可直接输入 <code>{{变量名}}</code>；需要用代码排版（内联样式、表格结构等）时切到「HTML 源码」。</div>
-                    <div id="editor-container">
-                        <div id="editor-toolbar"></div>
-                        <div id="edit-tpl-body"></div>
-                    </div>
-                    <!-- 源码模式：直接编辑邮件正文的 HTML，原样保存 -->
-                    <textarea id="body-source" class="code-textarea" spellcheck="false" style="display:none;"></textarea>
-                    <div class="code-hint" id="code-hint" style="display:none;">
-                        源码模式：内容原样保存（支持任意 HTML）。切回「富文本」时，编辑器不支持的结构（如 <code>&lt;style&gt;</code>、<code>&lt;table&gt;</code>）可能被简化，建议代码编排在源码模式下完成。
-                    </div>
-                </div>
-            </div>
-
-            <!-- 步骤2：XLSX/CSV附件 -->
-            <div class="step-panel" id="step-attachment" style="display:none;">
+            <!-- 步骤1：XLSX/CSV附件 -->
+            <div class="step-panel" id="step-attachment">
 
                 <!-- 附件基本设置 -->
                 <div class="attachment-section">
@@ -1280,7 +1148,7 @@
                     </div>
                 </div>
                     <div class="step-skip-note" id="skipNote2" style="display:none;">
-                        <span>第 2 步已跳过：不会生成 XLSX/CSV 附件，本步的配置不参与保存。</span>
+                        <span>第 1 步已跳过：不会生成 XLSX/CSV 附件，本步的配置不参与保存。</span>
                         <button type="button" onclick="restoreStep(2)">恢复此步</button>
                     </div>
 
@@ -1422,58 +1290,12 @@
 
             </div>
 
-            <!-- 预览与测试（面板保留；原「预览 PDF」入口按钮已移除） -->
+            <!-- 预览（面板保留；原「预览 PDF」入口按钮已移除）
+                 2026-10-16：删除邮件预览（桌面/移动/暗色/最差兼容视图、预览语言、模拟数据、测试发送）与「邮件客户端兼容性自检」表 -->
             <div class="step-panel" id="step-preview" style="display:none;">
 
-                <div class="preview-toolbar">
-                    <div class="view-switch" id="previewViewSwitch">
-                        <button type="button" class="active" data-view="desktop" onclick="setPreviewView('desktop')">桌面</button>
-                        <button type="button" data-view="mobile" onclick="setPreviewView('mobile')">移动</button>
-                        <button type="button" data-view="dark" onclick="setPreviewView('dark')">暗色</button>
-                        <button type="button" data-view="strip" onclick="setPreviewView('strip')">最差兼容</button>
-                    </div>
-                    <span style="font-size:12px;color:#666;">预览语言</span>
-                    <select id="previewLang" onchange="renderEmailPreview()" style="height:32px;border:1px solid #d9d9d9;border-radius:5px;padding:0 8px;font-size:12px;font-family:inherit;">
-                        <option value="zh-CN">简体中文</option>
-                        <option value="en">English</option>
-                        <option value="id">Bahasa Indonesia</option>
-                        <option value="es">Español</option>
-                        <option value="ru">русский</option>
-                        <option value="ar">العربية（RTL）</option>
-                        <option value="th">ภาษาไทย</option>
-                        <option value="ko">한국어</option>
-                        <option value="vi">Tiếng Việt</option>
-                    </select>
-                    <label style="font-size:12px;color:#666;display:flex;align-items:center;gap:6px;">
-                        <input type="checkbox" id="previewMockVars" checked onchange="renderEmailPreview()"> 使用模拟数据
-                    </label>
-                    <div style="flex:1"></div>
-                    <button type="button" class="btn btn-outline btn-sm" onclick="sendTestEmail()">测试发送</button>
-                </div>
-
-                <div class="preview-stage">
-                    <div>
-                        <div class="email-frame" id="emailFrame"></div>
-                        <div class="preview-strip-note">「最差兼容」模拟 Outlook 剥离 &lt;style&gt; 与外链图片后的降级效果（按钮为纯色块、无圆角、无背景图）</div>
-                    </div>
-                </div>
-
-                <div class="section-title" style="margin:20px 0 8px;">PDF 报表预览（当前版式设计器配置）</div>
+                <div class="section-title" style="margin:0 0 8px;">PDF 报表预览（当前版式设计器配置）</div>
                 <div class="pdf-preview-stage" id="pdfPreviewStage"></div>
-
-                <div class="section-title" style="margin:20px 0 4px;">邮件客户端兼容性自检</div>
-                <table class="compat-table">
-                    <thead>
-                        <tr><th>客户端</th><th>table 布局</th><th>内联样式</th><th>base64 图片</th><th>RTL</th><th>结论</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Outlook（桌面）</td><td class="ok-mark">✓</td><td class="ok-mark">✓</td><td class="warn-mark">△</td><td class="ok-mark">✓</td><td>VML 兜底按钮圆角</td></tr>
-                        <tr><td>Outlook（网页）</td><td class="ok-mark">✓</td><td class="ok-mark">✓</td><td class="ok-mark">✓</td><td class="ok-mark">✓</td><td>可直接使用</td></tr>
-                        <tr><td>Gmail</td><td class="ok-mark">✓</td><td class="ok-mark">✓</td><td class="warn-mark">✕</td><td class="ok-mark">✓</td><td>Logo 回退为文字品牌</td></tr>
-                        <tr><td>Apple Mail</td><td class="ok-mark">✓</td><td class="ok-mark">✓</td><td class="ok-mark">✓</td><td class="ok-mark">✓</td><td>完整还原</td></tr>
-                        <tr><td>QQ 邮箱 / 163 邮箱</td><td class="ok-mark">✓</td><td class="ok-mark">✓</td><td class="warn-mark">△</td><td class="warn-mark">△</td><td>关键样式双写兜底</td></tr>
-                    </tbody>
-                </table>
 
             </div>
         </div>
@@ -1483,7 +1305,7 @@
             </div>
             <div class="wz-foot-right">
                 <button class="btn" id="wzPrevBtn" style="display:none;" onclick="wizardPrev()">上一步</button>
-                <button class="btn btn-primary" id="wzNextBtn" onclick="wizardNext()">下一步：XLSX/CSV 附件</button>
+                <button class="btn btn-primary" id="wzNextBtn" onclick="wizardNext()">下一步：PDF 附件</button>
                 <button class="btn btn-primary" id="wzSaveBtn" style="display:none;" onclick="saveTemplate()">完成并保存</button>
             </div>
         </div>
@@ -1547,7 +1369,6 @@
 <!-- Toast -->
 <div id="toast-container"></div>
 
-<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <script>
 // ==================== 多语言配置（PRD §3.1.4 15种语言） ====================
 const LANG_CONFIG = [
@@ -1569,35 +1390,10 @@ const LANG_CONFIG = [
 ];
 
 // 构建一个空翻译条目
-function emptyTranslation(name, description, body) {
-    return { name: name || '', description: description || '', body: body || '' };
+function emptyTranslation(name, description) {
+    return { name: name || '', description: description || '' };
 }
 
-// 模版初始化时的默认 body（中文）
-function defaultBody(rt) {
-    if (rt === '日报' || rt === '周报' || rt === '月报') return defaultBodyReport();
-    if (rt === '告警通知') return defaultBodyAlert();
-    return defaultBodyOffline();
-}
-function defaultBodyReport() {
-    return `<p>尊敬的 {{收件人姓名}}:</p>
-<p>您好!</p>
-<p>您订阅的《{{模版名称}}》已生成完毕,生成时间为 {{生成时间}}。请点击下方按钮查看并下载完整报告。</p>
-<p style="text-align:center;margin:20px 0;">
-  <a href="javascript:void(0)" style="display:inline-block;padding:12px 32px;background:#24839B;color:#fff;border-radius:6px;text-decoration:none;font-size:15px;font-weight:600;">查看设备工况报告</a>
-</p>
-<p style="font-weight:600;">温馨提示:</p>
-<ol style="padding-left:18px;">
-  <li>出于数据安全考虑,本次报告未直接以附件形式发送,请通过上方链接登录您的账号后查看;</li>
-  <li>该链接自生成之日起3天内有效,过期后如需查看,请联系您的客户经理协助获取;</li>
-  <li>下载报告前需确认知悉以下条款。</li>
-</ol>
-<p style="font-weight:600;">数据使用与保密声明:</p>
-<p>本报告包含贵司专属设备运营数据,仅供贵司内部授权人员查阅使用。贵司应自行负责后续访问权限管理及内部分发控制,因贵司内部传播、转发或权限管理不当导致的信息扩散,Mysany不承担相应责任。</p>
-<p>如您对本次报告内容有任何疑问,或希望调整订阅设置,请重新在Mysany进行订阅。</p>
-<p>此邮件为系统自动发送,请勿直接回复。</p>
-<p>—— Mysany 服务团队</p>`;
-}
 function defaultAttachmentTable() {
     // 默认附件表格结构：表头行 + 变量占位符行
     return {
@@ -1607,76 +1403,6 @@ function defaultAttachmentTable() {
             ['{{统计周期}}', '{{设备机型}}', '{{设备编号}}', '{{工时}}', '{{能耗}}', '{{里程}}']
         ]
     };
-}
-function defaultBodyAlert() {
-    return `<div class="report-title" style="font-size:16px;">设备异常告警通知</div>
-<div class="report-subtitle">告警时间：{{生成时间}}</div>
-<div class="report-section"><h4>告警详情</h4><p>尊敬的{{收件人姓名}}，您好！</p>
-<p>系统监测到以下设备出现异常，请及时处理：</p>
-<table><thead><tr><th>设备编号</th><th>设备类型</th><th>所属工地</th><th>异常类型</th><th>发生时间</th></tr></thead>
-<tbody><tr><td>{{设备编号}}</td><td>挖掘机 SY485H</td><td>长沙梅溪湖工地</td><td class="status-error">{{异常类型}}</td><td>{{发送日期}} 14:30</td></tr></tbody></table></div>
-<div class="email-footer">此为自动告警通知，请勿回复 ｜ 登录平台可配置告警规则</div>`;
-}
-function defaultBodyOffline() {
-    return `<div class="report-title" style="font-size:16px;">设备离线提醒</div>
-<div class="report-subtitle">检测时间：{{生成时间}}</div>
-<div class="report-section"><h4>离线设备概况</h4><p>尊敬的{{收件人姓名}}，您好！</p>
-<p>系统检测到设备异常离线，累计异常预警 <strong>{{异常预警}}</strong>。请及时登录平台查看详情并处理。</p></div>
-<div class="email-footer">此为自动提醒通知 ｜ 登录平台可查看设备详情</div>`;
-}
-
-// 英文默认模板
-function defaultEnBody(rt) {
-    if (rt !== '日报' && rt !== '周报' && rt !== '月报') return '';
-    return `<div class="report-title">{{模版名称}}</div>
-<div class="report-subtitle">Period: {{发送日期}} | Generated: {{生成时间}}</div>
-<div class="report-section"><h4>1. Overview</h4>
-<p>Dear {{收件人姓名}},</p>
-<p>Working days: <strong>{{开工天数}}</strong>, Actual operating hours: <strong>{{实际操作时长}}</strong>.</p></div>
-<hr class="section-divider">
-<div class="report-section"><h4>2. Equipment Monitoring</h4></div>
-<table><thead><tr><th>Metric</th><th>Current Period</th><th>Metric</th><th>Current Period</th></tr></thead>
-<tbody>
-<tr><td>Engine Running Hours</td><td>{{发动机运行时长}}</td><td>Idle Hours</td><td>{{空转时长}}</td></tr>
-<tr><td>Fuel/Energy Consumption</td><td>{{能耗油耗}}</td><td>Gear Distribution</td><td>{{各挡位分布}}</td></tr>
-<tr style="background:#fafafa;font-weight:600;"><td>Abnormal Alerts</td><td>{{异常预警}}</td><td></td><td></td></tr>
-</tbody></table>
-<hr class="section-divider">
-<div class="report-section"><h4>3. Abnormal Equipment Details</h4></div>
-<table><thead><tr><th>#</th><th>Equipment ID</th><th>Type</th><th>Site</th><th>Abnormal</th><th>Duration</th><th>Status</th></tr></thead>
-<tbody>
-<tr><td>1</td><td>SY20240512003</td><td>Excavator SY485H</td><td>Changsha Site</td><td>Engine Overheat</td><td>2h 35min</td><td class="status-error">Pending</td></tr>
-</tbody></table>
-<div class="email-footer">Auto-generated by MySANY Platform | Contact: admin@sany.com.cn<br>To unsubscribe, please visit platform settings.</div>`;
-}
-
-// 英文告警通知模版
-function defaultEnAlertBody() {
-    return `<div class="report-title" style="font-size:16px;">Abnormal Alarm Notification</div>
-<div class="report-subtitle">Alarm Time: {{生成时间}}</div>
-<div class="report-section"><h4>Alarm Details</h4><p>Dear {{收件人姓名}},</p>
-<p>The system detected the following equipment abnormality, please handle promptly:</p>
-<table><thead><tr><th>Equipment ID</th><th>Type</th><th>Site</th><th>Abnormal</th><th>Time</th></tr></thead>
-<tbody><tr><td>{{设备编号}}</td><td>Excavator SY485H</td><td>Changsha Site</td><td class="status-error">{{异常类型}}</td><td>{{发送日期}} 14:30</td></tr></tbody></table></div>
-<div class="email-footer">Auto alarm, do not reply | Configure alarm rules in platform</div>`;
-}
-
-// 能耗分析月报模版
-function defaultBodyEnergy() {
-    return `<div class="report-title">能耗分析月报</div>
-<div class="report-subtitle">统计周期：{{发送日期}} ｜ 生成时间：{{生成时间}}</div>
-<div class="report-section"><h4>一、能耗总览</h4>
-<p>尊敬的{{收件人姓名}}，您好！</p>
-<p>本月设备累计能耗油耗 <strong>{{能耗油耗}}</strong>，开工天数 <strong>{{开工天数}}</strong> 天。</p></div>
-<hr class="section-divider">
-<div class="report-section"><h4>二、能耗明细</h4></div>
-<table><thead><tr><th>设备编号</th><th>设备类型</th><th>运行时长</th><th>能耗油耗</th><th>闲置时长</th><th>挡位分布</th></tr></thead>
-<tbody>
-<tr><td>{{设备编号}}</td><td>挖掘机 SY485H</td><td>{{发动机运行时长}}</td><td>{{能耗油耗}}</td><td>{{空转时长}}</td><td>{{各挡位分布}}</td></tr>
-</tbody></table>
-<hr class="section-divider">
-<div class="report-section"><h4>三、异常预警</h4><p>累计异常预警 <strong>{{异常预警}}</strong>，请关注以下异常类型：{{异常类型}}。</p></div>
-<div class="email-footer">本报表由 MySANY 设备管理平台自动生成 ｜ 如有疑问请联系 admin@sany.com.cn</div>`;
 }
 
 // ==================== 模版数据（多语言结构） ====================
@@ -1694,51 +1420,51 @@ const templates = [
     {
         id: 0, machineTypes: ['单机', '机群'], enabled: true, updatedAt: '2026-07-17 08:00', icon: TPL_ICONS.daily,
         translations: {
-            'zh-CN': { name: '设备运行日报模版', description: '适用于单台设备每日运行数据汇报', body: defaultBodyReport(), attachmentFileName: '{{模版名称}}_{{发送日期}}' }
+            'zh-CN': { name: '设备运行日报模版', description: '适用于单台设备每日运行数据汇报', attachmentFileName: '{{模版名称}}_{{发送日期}}' }
         }
     },
     {
         id: 1, machineTypes: ['单机', '机群'], enabled: true, updatedAt: '2026-07-17 08:30', icon: TPL_ICONS.weekly,
         translations: {
-            'zh-CN': { name: '设备运行周报模版', description: '适用于单台设备每周运行数据汇总汇报', body: defaultBodyReport(), attachmentFileName: '{{模版名称}}_{{发送日期}}' }
+            'zh-CN': { name: '设备运行周报模版', description: '适用于单台设备每周运行数据汇总汇报', attachmentFileName: '{{模版名称}}_{{发送日期}}' }
         }
     },
     {
         id: 2, machineTypes: ['单机', '机群'], enabled: true, updatedAt: '2026-07-18 09:00', icon: TPL_ICONS.monthly,
         translations: {
-            'zh-CN': { name: '设备运行月报模版', description: '适用于机群设备每月运行数据汇总汇报', body: defaultBodyReport(), attachmentFileName: '{{模版名称}}_{{发送日期}}' }
+            'zh-CN': { name: '设备运行月报模版', description: '适用于机群设备每月运行数据汇总汇报', attachmentFileName: '{{模版名称}}_{{发送日期}}' }
         }
     },
     {
         id: 3, machineTypes: ['单机', '机群'], enabled: true, updatedAt: '2026-07-19 10:15', icon: TPL_ICONS.alert,
         translations: {
-            'zh-CN': { name: '设备异常告警通知模版', description: '设备发生异常时自动发送告警通知', body: defaultBodyAlert(), attachmentFileName: '异常告警_{{发送日期}}' }
+            'zh-CN': { name: '设备异常告警通知模版', description: '设备发生异常时自动发送告警通知', attachmentFileName: '异常告警_{{发送日期}}' }
         }
     },
     {
         id: 4, machineTypes: ['单机', '机群'], enabled: false, updatedAt: '2026-07-20 14:20', icon: TPL_ICONS.offline,
         translations: {
-            'zh-CN': { name: '设备离线提醒模版', description: '设备离线超过阈值时自动发送提醒', body: defaultBodyOffline(), attachmentFileName: '离线提醒_{{发送日期}}' }
+            'zh-CN': { name: '设备离线提醒模版', description: '设备离线超过阈值时自动发送提醒', attachmentFileName: '离线提醒_{{发送日期}}' }
         }
     },
     {
         id: 5, machineTypes: ['单机', '机群'], enabled: true, updatedAt: '2026-07-21 16:00', icon: TPL_ICONS.energy,
         translations: {
-            'zh-CN': { name: '能耗分析月报模版', description: '单台设备月度能耗油耗分析报表', body: defaultBodyEnergy(), attachmentFileName: '能耗月报_{{发送日期}}' }
+            'zh-CN': { name: '能耗分析月报模版', description: '单台设备月度能耗油耗分析报表', attachmentFileName: '能耗月报_{{发送日期}}' }
         }
     },
     {
-        id: 6, machineTypes: ['单机', '机群'], emailLayout: 'digest',
+        id: 6, machineTypes: ['单机', '机群'],
         enabled: true, updatedAt: '2026-09-14 09:20', icon: TPL_ICONS.monthly,
         translations: {
-            'zh-CN': { name: '项目生产日报模版（按行程）', description: '按项目统计行程明细与产出，PDF 正文内嵌核心指标', body: defaultBodyReport(), attachmentFileName: '{{模版名称}}_{{项目名称}}_{{发送日期}}' }
+            'zh-CN': { name: '项目生产日报模版（按行程）', description: '按项目统计行程明细与产出，PDF 正文内嵌核心指标', attachmentFileName: '{{模版名称}}_{{项目名称}}_{{发送日期}}' }
         }
     },
     {
-        id: 7, machineTypes: ['单机', '机群'], emailLayout: 'notification',
+        id: 7, machineTypes: ['单机', '机群'],
         enabled: false, updatedAt: '2026-09-14 09:35', icon: TPL_ICONS.daily,
         translations: {
-            'zh-CN': { name: '项目能耗周报模版', description: '按项目汇总能耗与单位运输能耗，周报推送', body: defaultBodyReport(), attachmentFileName: '项目能耗_{{发送日期}}' }
+            'zh-CN': { name: '项目能耗周报模版', description: '按项目汇总能耗与单位运输能耗，周报推送', attachmentFileName: '项目能耗_{{发送日期}}' }
         }
     }
 ];
@@ -1845,21 +1571,20 @@ function openEditModal(index, isNew) {
     if (langs.includes('zh-CN')) currentEditLang = 'zh-CN';
     else if (langs.length > 0) currentEditLang = langs[0];
 
-    // 清空表格构建器缓存并重置到步骤1
+    // 清空表格构建器缓存并重置到第 1 步（XLSX/CSV 附件）
     tbDataKV = null;
     window._scModelKV = null;
     window._pdfScModelKV = null;
     // v2.0 合并：数据列配置是否已加载，避免步骤未进入时被 saveEditToState 覆盖成默认值
     attColLoaded = false;
     pdfColLoaded = false;
-    switchStep(1);
-
     document.getElementById('edit-modal').classList.add('show');
-    // loadEditForm 内部已通过 setTimeout 延迟加载 Quill 内容，无需额外 update
     loadEditForm(isNew);
-    // 打开后自动定位到顶部（编辑语言区域）：Quill 注入正文时会抢焦点把弹窗滚下去，这里多次校正
+    // 首次定位不落库（noSave），避免空表单 / 未加载的附件区把已存配置覆盖掉
+    switchStep(2, true);
+    // 打开后自动定位到顶部（编辑语言区域）
     scrollEditModalTop();
-    [60, 160, 360, 700].forEach(ms => setTimeout(scrollEditModalTop, ms));
+    [60, 200].forEach(ms => setTimeout(scrollEditModalTop, ms));
 }
 
 // 把编辑弹窗的滚动容器拉回顶部（新增 / 编辑 / 切换语言 / 切换步骤后调用）
@@ -1880,14 +1605,14 @@ function loadEditForm(isNew) {
     const tr = getT(currentTemplateId, currentEditLang);
     const hasTr = hasLang(currentTemplateId, currentEditLang);
 
-    document.getElementById('edit-modal-title').textContent = isNew ? '新建邮件模版' : '编辑模版';
+    document.getElementById('edit-modal-title').textContent = isNew ? '新建模版' : '编辑模版';
     document.getElementById('edit-tpl-name').value = hasTr ? tr.name : '';
     document.getElementById('edit-tpl-desc').value = hasTr ? (tr.description || '') : '';
-    // 三步向导：重置跳过 / 已配置标记，口径由第 2、3 步勾选汇总
+    // 向导（两步）：重置跳过 / 已配置标记，口径由两步勾选汇总
     editIsNew = !!isNew;
     editStepSkip = { 2: false, 3: false };
     editStepTouched = { 2: false, 3: false };
-    editWizardStep = 1;
+    editWizardStep = 2;
     setEditTypes(isNew ? ['单机', '机群'] : getTypes(t));
     editScope = 'single';
     toggleDataColumnConfig(true);
@@ -1901,17 +1626,6 @@ function loadEditForm(isNew) {
 
     // 更新语言选择器
     updateLangSelect();
-
-    // 初始化Quill并加载正文内容（延迟确保DOM就绪）
-    initQuill();
-    const bodyToLoad = hasTr ? tr.body : '';
-    bodyLoadedOnce = false;   // 正文注入完成前，保存时不要用空编辑器覆盖已存正文
-    setTimeout(() => {
-        setBodyHTML(bodyToLoad);
-        if (quill) quill.update();
-        switchBodyMode('rich'); // 打开模版 / 切换语言时回到富文本模式
-        bodyLoadedOnce = true;
-    }, 80);
 }
 
 function updateLangSelect() {
@@ -1945,7 +1659,6 @@ function switchEditLang(lang) {
         const newTr = {
             name: zhTr.name ? zhTr.name + ' (' + (lc ? lc.label : lang) + ')' : '',
             description: zhTr.description || '',
-            body: zhTr.body || '',
             attachmentFileName: zhTr.attachmentFileName || '',
             pdfAttachmentFileName: zhTr.pdfAttachmentFileName || '',
             pdfDocKV: zhTr.pdfDocKV ? zhTr.pdfDocKV.map(r => [r[0]||'', r[1]||'']) : [['', '']],
@@ -1960,45 +1673,43 @@ function switchEditLang(lang) {
         t.translations = {};
         t.translations[lang] = newTr;
     }
-    // 重置到步骤1并清空表格构建器缓存
+    // 重置到第 1 步（XLSX/CSV 附件）并清空表格构建器缓存
     tbDataKV = null;
     window._scModelKV = null;
     window._pdfScModelKV = null;
     // v2.0 合并：数据列配置是否已加载，避免步骤未进入时被 saveEditToState 覆盖成默认值
     attColLoaded = false;
     pdfColLoaded = false;
-    switchStep(1);
-    // 沿用当前「新建 / 编辑」语义：新建流程里切语言不该把标题变成「编辑模版」、也不该丢掉「新建」状态
+    // 先回填表单再切步（切步会 saveEditToState，顺序反了会把上一个语言的表单值写到新语言上）
     loadEditForm(editIsNew);
+    switchStep(2, true);
     scrollEditModalTop();
     [60, 160, 360].forEach(ms => setTimeout(scrollEditModalTop, ms));
 }
 
 function saveEditToState() {
     const t = templates[currentTemplateId];
-    const bodyHTML = getBodyHTML();
-    // 正文尚未注入编辑器（打开弹窗后 80ms 内就点了下一步）时不覆盖已存正文，避免把示例正文清空
-    const curTr = t.translations[currentEditLang];
-    const bodyToSave = (!bodyLoadedOnce && curTr && curTr.body) ? curTr.body : bodyHTML;
+    if (!t) return;   // 模版已被删除 / 索引越界时不动数据
     if (hasLang(currentTemplateId, currentEditLang)) {
         t.translations[currentEditLang].name = document.getElementById('edit-tpl-name').value.trim();
         t.translations[currentEditLang].description = document.getElementById('edit-tpl-desc').value.trim();
-        t.translations[currentEditLang].body = bodyToSave;
     } else {
         t.translations[currentEditLang] = {
             name: document.getElementById('edit-tpl-name').value.trim(),
-            description: document.getElementById('edit-tpl-desc').value.trim(),
-            body: bodyToSave
+            description: document.getElementById('edit-tpl-desc').value.trim()
         };
     }
     // 附件配置（文件名 / 表格 / PDF 模板 / 键值）：按步骤跳过状态与各步自己的口径分别落库
     const trObj = t.translations[currentEditLang];
     const s2 = editStepSkip[2] ? { single: false, fleet: false } : editScopeByStep[2];
 
-    // ── 第 2 步：XLSX / CSV 附件 ──
+    // ── XLSX / CSV 附件（内部步骤号 2）──
     if (!editStepSkip[2]) {
-        const attNameEl = document.getElementById('attach-filename');
-        trObj.attachmentFileName = attNameEl ? attNameEl.value.trim() : '';
+        // 该步内容已加载才回写（否则输入框还是空值，会把已保存的文件名清空）
+        if (attColLoaded) {
+            const attNameEl = document.getElementById('attach-filename');
+            trObj.attachmentFileName = attNameEl ? attNameEl.value.trim() : '';
+        }
         // 机群那套：行式列配置（仅在步骤已加载时才写，避免覆盖已保存配置）
         if (s2.fleet && attColLoaded && Array.isArray(tbDataKV)) {
             trObj.attachmentTableKVFleet = tbDataKV.map(r => [r[0]||'', r[1]||'']);
@@ -2010,10 +1721,12 @@ function saveEditToState() {
         }
     }
 
-    // ── 第 3 步：PDF 附件（字段绑定与版式存在 pdfDesignerJson 里，随模版保存落库）──
+    // ── PDF 附件（内部步骤号 3；字段绑定与版式存在 pdfDesignerJson 里，随模版保存落库）──
     if (!editStepSkip[3]) {
-        const pdfFilenameEl = document.getElementById('pdf-attach-filename');
-        trObj.pdfAttachmentFileName = pdfFilenameEl ? pdfFilenameEl.value.trim() : '';
+        if (pdfColLoaded) {
+            const pdfFilenameEl = document.getElementById('pdf-attach-filename');
+            trObj.pdfAttachmentFileName = pdfFilenameEl ? pdfFilenameEl.value.trim() : '';
+        }
         // 原「查看 json」入口已移除：版式 JSON 改为保存时静默落库（否则重开设计器会丢版式）
         if (pdfV3) trObj.pdfDesignerJson = JSON.stringify(pdfV3Payload());
     }
@@ -2026,141 +1739,8 @@ function saveEditToState() {
 function closeEditModal() {
     addFlow = false;   // 关闭弹窗即结束「新增流程」
     document.getElementById('edit-modal').classList.remove('show');
-    // 重置到步骤1
-    switchStep(1);
-}
-
-// ==================== Quill 富文本编辑器 ====================
-let quill;
-// v2.0 调整：正文编辑模式 —— 'rich' = 富文本（Quill）；'code' = HTML 源码（代码原样输入 / 保存）
-let bodyMode = 'rich';
-let bodyLoadedOnce = false;   // 正文是否已注入编辑器（用于避免用空编辑器覆盖已存正文）
-// 源码缓存：避免「源码 → 富文本 → 源码」来回切换时，原始代码被 Quill 的简化结果覆盖
-let bodyRawCache = '';
-let bodyRichSnapshot = '';
-
-function initQuill() {
-    if (quill) return;
-    const toolbarOptions = [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'color': [] }, { 'background': [] }],
-        [{ 'align': [] }],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        ['blockquote', 'code-block'],
-        ['link', 'image'],
-        ['clean']
-    ];
-    quill = new Quill('#edit-tpl-body', {
-        modules: { toolbar: toolbarOptions },
-        theme: 'snow'
-    });
-    // 将 Quill 自动生成的 toolbar 移入 editor-container
-    const container = document.getElementById('editor-container');
-    const toolbar = document.getElementById('edit-tpl-body').previousElementSibling;
-    if (toolbar && toolbar.classList.contains('ql-toolbar')) {
-        container.insertBefore(toolbar, document.getElementById('edit-tpl-body'));
-    }
-}
-
-function getBodyHTML() {
-    // 源码模式下以源码文本为准：原样保存，不经过 Quill 解析（代码、表格、内联样式不丢）
-    if (bodyMode === 'code') {
-        const src = document.getElementById('body-source');
-        return src ? src.value.trim() : '';
-    }
-    if (!quill) return '';
-    // 将变量样式 span 还原为纯文本 {{变量}}（用于存储）
-    const el = quill.root.cloneNode(true);
-    el.querySelectorAll('.ql-variable').forEach(span => {
-        span.replaceWith(document.createTextNode(span.textContent));
-    });
-    return el.innerHTML;
-}
-
-function setBodyHTML(html) {
-    if (!quill) return;
-    const temp = document.createElement('div');
-    temp.innerHTML = html || '';
-    // 将 {{变量}} 文本转为 styled span
-    function wrapVars(node) {
-        if (node.nodeType === Node.TEXT_NODE) {
-            const text = node.textContent;
-            if (!/\{\{.+?\}\}/g.test(text)) return;
-            const frag = document.createDocumentFragment();
-            let lastIdx = 0;
-            text.replace(/\{\{(.+?)\}\}/g, (match, inner, idx) => {
-                if (idx > lastIdx) frag.appendChild(document.createTextNode(text.slice(lastIdx, idx)));
-                const span = document.createElement('span');
-                span.className = 'ql-variable';
-                span.textContent = match;
-                frag.appendChild(span);
-                lastIdx = idx + match.length;
-            });
-            if (lastIdx < text.length) frag.appendChild(document.createTextNode(text.slice(lastIdx)));
-            node.parentNode.replaceChild(frag, node);
-        } else if (node.nodeType === Node.ELEMENT_NODE) {
-            Array.from(node.childNodes).forEach(c => wrapVars(c));
-        }
-    }
-    wrapVars(temp);
-    // 使用 Quill API 设置内容，确保编辑器内部 Delta 状态同步
-    quill.setContents([{ insert: '\n' }], 'silent');
-    quill.clipboard.dangerouslyPasteHTML(0, temp.innerHTML, 'silent');
-    // 刷新编辑器渲染
-    setTimeout(() => { if (quill) quill.update(); }, 30);
-}
-
-// 切换正文编辑模式：富文本 ↔ HTML 源码（双向带内容）
-function switchBodyMode(mode) {
-    const src = document.getElementById('body-source');
-    if (!src) return;
-    const container = document.getElementById('editor-container');
-    const hint = document.getElementById('code-hint');
-
-    if (mode === 'code' && bodyMode !== 'code') {
-        // 若切到富文本后用户没改过内容，则恢复原始源码，避免代码被 Quill 简化
-        if (bodyRawCache && getBodyHTML() === bodyRichSnapshot) {
-            src.value = bodyRawCache;
-        } else {
-            src.value = getBodyHTML();
-        }
-        bodyMode = 'code';
-    } else if (mode === 'rich' && bodyMode === 'code') {
-        bodyRawCache = src.value;             // 记住源码
-        bodyMode = 'rich';                    // 先切模式：下面的 getBodyHTML() 才会读富文本而不是源码
-        setBodyHTML(bodyRawCache);            // 回写到富文本（Quill 不支持的结构会被简化）
-        bodyRichSnapshot = getBodyHTML();     // 记录转换后的富文本快照，用于判断是否被编辑过
-    }
-
-    if (container) container.style.display = (bodyMode === 'code') ? 'none' : '';
-    src.style.display = (bodyMode === 'code') ? '' : 'none';
-    if (hint) hint.style.display = (bodyMode === 'code') ? '' : 'none';
-    Array.prototype.slice.call(document.querySelectorAll('#body-editor-modes .be-mode-btn')).forEach(function (b) {
-        b.classList.toggle('active', b.dataset.mode === bodyMode);
-    });
-    if (bodyMode === 'code') setTimeout(function () { src.focus(); }, 0);
-}
-
-function insertVarEdit(v) {
-    // 源码模式：按光标位置插入到文本域
-    if (bodyMode === 'code') {
-        const src = document.getElementById('body-source');
-        if (!src) return;
-        const s = (src.selectionStart != null) ? src.selectionStart : src.value.length;
-        const e = (src.selectionEnd != null) ? src.selectionEnd : s;
-        src.value = src.value.slice(0, s) + v + src.value.slice(e);
-        src.focus();
-        src.setSelectionRange(s + v.length, s + v.length);
-        return;
-    }
-    if (!quill) return;
-    const range = quill.getSelection(true);
-    quill.clipboard.dangerouslyPasteHTML(range.index,
-        '<span class="ql-variable">' + v + '</span>'
-    );
-    quill.setSelection(range.index + 1, 0);
-    quill.focus();
+    // 重置到第 1 步（关闭时不落库，模版可能已被删除）
+    switchStep(2, true);
 }
 
 function saveTemplate() {
@@ -2173,7 +1753,6 @@ function saveTemplate() {
     // 描述字段名为 description（兼容历史数据里的 desc）
     if (!curTr || !(curTr.description || curTr.desc)) { showToast('模版描述不能为空', 'error'); return; }
     if (!getTypes(t).length) { showToast('请选择适用范围', 'error'); return; }
-    if (!curTr || !curTr.body) { showToast('正文内容不能为空', 'error'); return; }
     t.updatedAt = nowStr();
     renderTemplateTable();
     // 新增模版：提交后不关闭弹窗，只提示「添加成功」，便于直接切换「编辑语言」继续添加其它语言
@@ -2385,7 +1964,7 @@ function initPdfDesigner() {
 }
 
 function pdfV3RenderAll() {
-    if (!pdfV3) return;        // 尚未初始化（未进入第 3 步）时直接忽略
+    if (!pdfV3) return;        // 尚未初始化（未进入 PDF 附件那步）时直接忽略
     pdfSyncScopeSelection();   // 单机 / 机群 各一套模块：切换后自动落到当前口径的那一套
     const nameView = document.getElementById('pdfTplNameView');
     if (nameView) nameView.textContent = pdfV3TplName();
@@ -2674,7 +2253,7 @@ function pdfRemoveMetric(i) {
     pdfV3RenderAll();
 }
 
-// 顶部「统计时间维度」在进入第 3 步之前就能勾选：此时设计器还没初始化，只留 DOM 状态，
+// 顶部「统计时间维度」在进入 PDF 附件那步之前就能勾选：此时设计器还没初始化，只留 DOM 状态，
 // 由 initPdfDesigner() 按 DOM 读取（否则会抛错、且用户的勾选会被默认值覆盖）
 function readTimeDimsFromDom() {
     return [].filter.call(document.querySelectorAll('#edit-modal [data-td]'), el => el.checked)
@@ -3224,78 +2803,17 @@ function pdfCloseFieldPicker() {
     if (ov) ov.classList.remove('active');
 }
 
-/* ==================== v2.0：邮件版式与预览 ==================== */
-let previewView = 'desktop';
 
-const EMAIL_I18N = {
-    'zh-CN': { hello: '尊敬的 {{收件人姓名}}：', line1: '您订阅的《{{模版名称}}》已生成完毕，生成时间 {{生成时间}}。', btn: '查看并下载完整报告', tips: '温馨提示', t1: '报告已作为 PDF 附件发送，也可通过上方链接在线查看；', t2: '链接自生成之日起 3 天内有效；', t3: '附件含贵司专属数据，请勿外传。', foot: '此邮件为系统自动发送，请勿直接回复。', team: '—— MySANY 服务团队' },
-    'en': { hello: 'Dear {{收件人姓名}},', line1: 'Your subscription 《{{模版名称}}》 is ready. Generated at {{生成时间}}.', btn: 'View & Download Report', tips: 'Notes', t1: 'The report is attached as PDF and also available via the link above;', t2: 'The link is valid for 3 days from generation;', t3: 'The attachment contains your proprietary data, do not forward.', foot: 'This is an automated message, please do not reply.', team: '— MySANY Service Team' },
-    'id': { hello: 'Yth. {{收件人姓名}},', line1: 'Langganan Anda 《{{模版名称}}》 telah selesai dibuat pada {{生成时间}}.', btn: 'Lihat & Unduh Laporan', tips: 'Catatan', t1: 'Laporan dikirim sebagai lampiran PDF dan dapat dilihat melalui tautan di atas;', t2: 'Tautan berlaku 3 hari sejak dibuat;', t3: 'Lampiran berisi data eksklusif Anda, jangan diteruskan.', foot: 'Email ini dikirim otomatis, mohon tidak membalas.', team: '— Tim Layanan MySANY' },
-    'ar': { hello: 'عزيزي {{收件人姓名}}،', line1: 'تم إنشاء تقرير 《{{模版名称}}》 في {{生成时间}}.', btn: 'عرض وتنزيل التقرير', tips: 'ملاحظات', t1: 'تم إرسال التقرير كمرفق PDF ويمكن عرضه عبر الرابط أعلاه؛', t2: 'الرابط صالح لمدة 3 أيام؛', t3: 'المرفق يحتوي على بيانات خاصة، يرجى عدم إعادة إرساله.', foot: 'هذه رسالة آلية، يرجى عدم الرد.', team: '— فريق خدمة MySANY' }
-};
+function switchStep(stepNum, noSave) {
+    // 离开当前步时先把当前内容落进模版对象；noSave=true 用于「打开弹窗 / 切语言」的首次定位
+    if (!noSave && stepNum !== 1) { saveEditToState(); }
 
-function emailT() {
-    const lang = document.getElementById('previewLang') ? document.getElementById('previewLang').value : 'zh-CN';
-    return EMAIL_I18N[lang] || EMAIL_I18N['en'];
-}
-
-function renderEmailPreview() {
-    const frame = document.getElementById('emailFrame');
-    if (!frame) return;
-    const t = emailT();
-    const useMock = document.getElementById('previewMockVars').checked;
-    const v = (ph, mock) => useMock ? mock : ph;
-    const lang = document.getElementById('previewLang').value;
-
-    frame.className = 'email-frame' + (previewView === 'desktop' ? '' : ' ' + previewView);
-    frame.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
-
-    /* 系统固定页头（品牌条） */
-    let html = `<div class="email-brand-bar">SANY · MySANY 设备管理平台</div><div class="email-body">`;
-
-    /* ==== 以下为管理员富文本内容（等价于编辑器所见） ==== */
-    html += `<p>${t.hello.replace('{{收件人姓名}}', v('{{收件人姓名}}', 'Schuck'))}</p>`;
-    html += `<p>${t.line1.replace('{{模版名称}}', v('{{模版名称}}', '设备运行月报模版')).replace('{{生成时间}}', v('{{生成时间}}', '2026-09-14 10:20'))}</p>`;
-    html += `<p><b>本期关键数据</b></p>`;
-    html += `<table class="email-mini-table">
-        <thead><tr><th>设备编号</th><th>工时</th><th>能耗</th><th>里程</th></tr></thead>
-        <tbody>
-            <tr><td>${v('{{设备编号}}', 'SY215C9CA01234')}</td><td>${v('{{工时}}', '284.4')}</td><td>${v('{{能耗}}', '5,669.0')}</td><td>${v('{{里程}}', '128.6')}</td></tr>
-            <tr><td>EX003</td><td>251.5</td><td>4,980.2</td><td>96.4</td></tr>
-            <tr><td>EX007</td><td>198.4</td><td>3,652.0</td><td>74.1</td></tr>
-        </tbody>
-    </table>`;
-    html += `<p style="text-align:center;margin:18px 0;"><span class="email-btn">${t.btn}</span></p>`;
-    html += `<p style="font-weight:600;">${t.tips}</p><ol style="padding-left:18px;margin:0 0 10px;"><li>${t.t1}</li><li>${t.t2}</li><li>${t.t3}</li></ol>`;
-    html += `<p style="font-size:12px;color:#666;">本报告包含贵司专属设备运营数据，仅供贵司内部授权人员查阅使用，请勿外传。</p>`;
-    html += `</div>`;
-
-    /* 系统固定页脚 */
-    html += `<div class="email-foot">${t.foot}<br>${t.team}</div>`;
-    frame.innerHTML = html;
-}
-
-function setPreviewView(view) {
-    previewView = view;
-    document.querySelectorAll('#previewViewSwitch button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
-    renderEmailPreview();
-}
-
-function sendTestEmail() {
-    showToast('测试邮件已发送至 admin@sany.com.cn（含当前版式渲染结果）', 'success');
-}
-
-function switchStep(stepNum) {
-    // 离开步骤1 / 2 时先把当前内容落进模版对象
-    if (stepNum !== 1) { saveEditToState(); }
-
-    document.getElementById('step-body').style.display = stepNum === 1 ? '' : 'none';
     document.getElementById('step-attachment').style.display = stepNum === 2 ? '' : 'none';
     document.getElementById('step-pdf').style.display = stepNum === 3 ? '' : 'none';
     const previewPanel = document.getElementById('step-preview');
     if (previewPanel) previewPanel.style.display = stepNum === 4 ? '' : 'none';
 
-    // 向导步骤（「预览与测试」面板归属第 3 步）
+    // 向导步骤（「预览」面板归属 PDF 那一步）
     editWizardStep = (stepNum === 4) ? 3 : stepNum;
     document.querySelectorAll('.wz-step').forEach(tab => {
         tab.classList.toggle('active', parseInt(tab.dataset.step, 10) === editWizardStep);
@@ -3309,14 +2827,14 @@ function switchStep(stepNum) {
     if (stepNum === 2) { initAttachmentTable(); toggleDataColumnConfig(); }
     // 进入步骤3时初始化 PDF 区域
     if (stepNum === 3) { initPdfSection(); initPdfDesigner(); }
-    // 进入步骤4时渲染邮件预览与 PDF 预览
-    if (stepNum === 4) { renderEmailPreview(); renderPdfCanvas(); }
+    // 进入预览面板时渲染 PDF 预览
+    if (stepNum === 4) { renderPdfCanvas(); }
     refreshWizard();
     // 切步后回到顶部，避免停留在上一步的滚动位置
     scrollEditModalTop();
 }
 
-// ==================== 三步向导：单机 / 机群 口径跟随第 2、3 步的配置 ====================
+// ==================== 向导（两步：XLSX/CSV 附件 · PDF 附件）：单机 / 机群 口径跟随两步的配置 ====================
 // 读取模版适用范围（新结构 machineTypes；老数据 machineType 兜底兼容）
 function getTypes(t) {
     if (t && Array.isArray(t.machineTypes) && t.machineTypes.length) return t.machineTypes.slice();
@@ -3324,7 +2842,7 @@ function getTypes(t) {
 }
 
 // 向导状态：步骤号 / 每步是否跳过 / 每步勾选的口径 / 每步是否被操作过（用于「已配置」标记）
-let editWizardStep = 1;
+let editWizardStep = 2;
 let editIsNew = false;          // 新建 vs 编辑已有模版（新建时「已配置」只认用户操作）
 // 「新增流程」标记：从列表「新建模版」进入即置 true，直到关闭弹窗才复位。
 // 注意不能用 editIsNew —— 切换「编辑语言」会调 loadEditForm() 把它冲成 false）
@@ -3368,20 +2886,20 @@ function toggleEditType(type) {
     refreshWizard();
 }
 
-// 跳过 / 恢复某一步（仅第 2 步可跳过；第 3 步是最后一步，直接保存即可）
+// 跳过 / 恢复某一步（仅 XLSX/CSV 附件那步可跳过；PDF 附件是最后一步，直接保存即可）
 function skipCurrentStep() {
     const s = editWizardStep;
     if (s !== 2) return;
     editStepSkip[2] = true;
     toggleDataColumnConfig(true);
-    showToast('已跳过第 2 步：不生成 XLSX/CSV 附件', 'success');
+    showToast('已跳过第 1 步：不生成 XLSX/CSV 附件', 'success');
     refreshWizard();
     saveEditToState();
 }
 function restoreStep(s) {
     editStepSkip[s] = false;
     if (s === 2) toggleDataColumnConfig(true);
-    showToast('已恢复第 ' + s + ' 步配置', 'success');
+    showToast('已恢复「' + (s === 2 ? 'XLSX/CSV 附件' : 'PDF 附件') + '」的配置', 'success');
     refreshWizard();
 }
 
@@ -3425,14 +2943,14 @@ function refreshWizard() {
     document.querySelectorAll('.wz-step').forEach(el => {
         const s = parseInt(el.dataset.step, 10);
         const skipped = !!editStepSkip[s];
-        const done = s === 1 ? false : stepHasContent(s);
+        const done = stepHasContent(s);
         el.classList.toggle('active', s === editWizardStep);
         el.classList.toggle('skipped', skipped);
         el.classList.toggle('done', !skipped && done);
         const stEl = document.getElementById('wzState' + s);
         if (stEl) {
-            stEl.textContent = s === 1 ? '必填' : (skipped ? '已跳过' : (done ? '已配置' : '未配置'));
-            stEl.className = 'wz-state ' + (s === 1 ? 'req' : (skipped ? 'skip' : (done ? 'ok' : '')));
+            stEl.textContent = skipped ? '已跳过' : (done ? '已配置' : '未配置');
+            stEl.className = 'wz-state ' + (skipped ? 'skip' : (done ? 'ok' : ''));
         }
     });
 
@@ -3453,30 +2971,28 @@ function refreshWizard() {
     if (prev) prev.style.display = s > 1 ? '' : 'none';
     if (next) {
         next.style.display = s < 3 ? '' : 'none';
-        next.textContent = s === 1 ? '下一步：XLSX/CSV 附件' : '下一步：PDF 附件';
+        next.textContent = '下一步：PDF 附件';
     }
     if (save) save.style.display = s === 3 ? '' : 'none';
     if (skip) {
-        // 只有第 2 步可跳过（第 3 步是最后一步，直接「完成并保存」即可）
+        // 只有 XLSX/CSV 附件那步可跳过（PDF 附件是最后一步，直接「完成并保存」即可）
         const canSkip = (s === 2) && !editStepSkip[2];
         skip.style.display = canSkip ? '' : 'none';
         skip.textContent = '跳过此步（不生成 XLSX/CSV 附件）';
     }
 }
 
-// 向导前后翻页：第 1 步校验必填，第 3 步「下一步」= 完成并保存
+// 向导前后翻页：翻页前校验基本信息（名称 / 描述必填），最后一步「下一步」= 完成并保存
 function checkStep1() {
     saveEditToState();
     const t = templates[currentTemplateId];
     const zhTr = t.translations['zh-CN'];
     if (!zhTr || !zhTr.name) { showToast('中文模版名称不能为空', 'error'); return false; }
     if (!zhTr || !(zhTr.description || zhTr.desc)) { showToast('中文模版描述不能为空', 'error'); return false; }
-    if (!zhTr || !zhTr.body) { showToast('中文正文内容不能为空', 'error'); return false; }
     return true;
 }
 function wizardNext() {
-    if (editWizardStep === 1) { if (checkStep1()) switchStep(2); return; }
-    if (editWizardStep === 2) { switchStep(3); return; }
+    if (editWizardStep === 2) { if (checkStep1()) switchStep(3); return; }
     saveTemplate();
 }
 function wizardPrev() {
@@ -3489,7 +3005,7 @@ let editScope = 'single';
 let attColLoaded = false;    // 步骤2：XLSX/CSV 数据列配置
 let pdfColLoaded = false;    // 步骤3：PDF 数据列配置
 
-// 切换整体口径：第 2 步的数据列配置 + 第 3 步的数据模块与版式一起换
+// 切换整体口径：XLSX/CSV 的数据列配置 + PDF 的数据模块与版式一起换
 function setEditScope(tab) {
     editScope = (tab === 'fleet') ? 'fleet' : 'single';
     toggleDataColumnConfig();
@@ -4792,7 +4308,6 @@ function createAndEdit() {
             'zh-CN': {
                 name: '挖掘机_机群_标准运行报表',
                 description: '适用于挖掘机设备每日运行数据简报',
-                body: defaultBodyReport(),
                 attachmentFileName: defaultAttachmentFileName(),
                 attachmentTable: defaultAttachmentTable()
             }

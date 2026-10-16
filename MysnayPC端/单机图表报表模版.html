@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>单机图表报表模版 · 图表性质（指标卡 / 折线 / 柱状 / 环形）</title>
+<style>
+/* ============================================================================
+   图表性质报表 · 单机 / 机群 共用版式（版式基准 = 同目录 单机报表模版.html）
+   本页 = 以「图表」为主体的报告：指标卡 / 折线图 / 柱状图 / 环形图（不含数据明细表）
+   规则出处：V2/组件规则说明.html（五类组件规格）+ PRDv2.0（组件 × 口径上限）
+
+   ① 口径差异（唯一差异，其余全部相同）：
+      单机口径 —— 折线：多指标 ≤5 且必须同单位；圆柱：多指标 ≤5 同单位；环形：多指标 ≤5 同单位构成比例
+      机群口径 —— 折线：只 1 指标，每台设备一条线（图例 = 设备编号-指标），单次最多前 10 台（＝10 条线）；
+                  柱状：可做设备排行榜（横向，数值贴条尾），单次最多前 10 台；
+                  环形：只 1 个累计型指标的单机贡献度（前 5 台 + 其他）
+   ② 组件上限：指标卡 单行 ≤4 张（超过 4 张拆第二行，不横向滚动）；折线 / 柱状 / 环形 同屏多指标 ≤5（5 色循环）；
+      机群折线 / 环形 指标上限 = 1（再选即替换）；机群折线 / 柱状（设备作类目）单次最多前 10 台
+      （资产可远多于 10 台，图里只出前 10 台 / 前 10 条，不滚动、不轮播、不按段分页）。
+   ③ 同单位约束：折线 / 柱状 / 环形 同屏指标单位必须完全一致；单位不同必须拆图（例：kWh 与 km 不共轴）。
+   ④ 时间口径：日 / 周 / 月 / 班次；日=近 7 节点、周=近 8 周、月=近 12 月、自定义 ≤31 天。
+   ⑤ 密度：只用静态排版解决 —— 刻度倾斜 40° + 抽稀（约 12 个刻度，末点必标）；不滚动、不轮播、不分段。
+   ⑥ 空值：无值不显示（不出图 / 图例隐藏）；明细类输出 -。
+   ⑦ 配色：--sany-red #E60000 + 品牌黑 #1a1a1a/#000 + 官方灰阶（#575757 / #A0A0A0 / #CACACA / #DCDCDC）。
+   ⑧ 版式（2026-10-16 起）：国内版为「网页直接预览」——不再按 A4 排版：无报表头、无页脚、无水印。
+     页面 = 仪表盘卡片栅格：.main 4 列（≤1180px 两列、≤760px 一列），.section 即卡片；
+     指标卡组 .section.plain + .metric 独立卡；折线 span-4，柱 / 环形 / 水平柱（机群＝排行）/ 明细 span-2。
+     仅留一条打印兜底：隐藏筛选工具条、卡片不跨页、thead 跨页重复。
+  ⑨ 页头：仪表盘式一行（报表名 + 口径徽标 + 元信息占位）。原 SANY 字标 / {{报表名称}} / 元信息条 3 格 /
+     双线页头与页脚（报告生成人 · 自动生成说明 · 黑色 San VIST 条）已按用户要求删除。
+   ============================================================================ */
+* { box-sizing: border-box; }
+:root {
+    --sany-red: #E60000;
+    --pri: #1a1a1a;
+    --pri-dark: #000000;
+    --ink: #1a1a1a;
+    --grey: #575757;
+    --line: #dcdcdc;
+}
+body {
+    margin: 0;
+    background: #f3f4f6;                     /* 仪表盘底色：与 PC 后台「报表模版」页一致 */
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    color: #1a1a1a;
+}
+/* ===== 页头（仪表盘式）：报表名 + 口径徽标 + 一行元信息 =====
+   2026-10-16：国内版改为「网页直接预览」（不再走 PDF 报表），原 A4 报表头 / 水印 / 页脚已删除 */
+.dash { max-width: 1440px; margin: 0 auto; padding: 18px 20px 30px; }
+.dash-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.dash-title { font-size: 19px; font-weight: 700; color: #161a2e; }
+.dash-scope {
+    display: inline-block; margin-left: 8px; padding: 1px 8px; vertical-align: 2px;
+    font-size: 11px; font-weight: 600; border-radius: 4px; background: #e6f7ff; color: #1890ff;
+}
+.dash-scope.fleet { background: #fff7e6; color: #fa8c16; }
+.dash-meta { font-size: 12px; color: #8b90a0; }
+/* 页头左侧（返回 + 标题）与右侧（切换器 + 元信息） */
+.dash-head .dh-left, .dash-head .dh-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.dh-back {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; flex-shrink: 0;
+    font-size: 16px; line-height: 1; color: #5a6472; background: #fff; border: 1px solid #e3e5ea;
+    border-radius: 6px; text-decoration: none; transition: all .15s;
+}
+.dh-back:hover { color: var(--sany-red); border-color: #f6a8ae; }
+.dh-pick { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #8b90a0; }
+.dh-pick select {
+    height: 28px; padding: 0 8px; max-width: 220px;
+    font-family: inherit; font-size: 12.5px; color: #161a2e;
+    background: #fff; border: 1px solid #e3e5ea; border-radius: 6px; cursor: pointer;
+}
+.dh-pick select:focus { outline: none; border-color: var(--sany-red); }
+/* 嵌入预览（?embed=1）时宿主页面已有返回入口，自己的返回按钮隐藏 */
+html.embed .dh-back { display: none; }
+html.embed .dash-title { display: none; }   /* 嵌入预览时报表名由宿主页显示，避免重复 */
+/* ---------- 卡片栅格（原 .main 由 A4 竖排改为 4 列仪表盘栅格）---------- */
+.main {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    align-items: stretch;                    /* 同行卡片等高，避免参差 */
+    padding-top: 16px;
+}
+@media (max-width: 1180px) {
+    .main { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .span-4 { grid-column: span 2; }
+}
+@media (max-width: 760px) {
+    .main { grid-template-columns: 1fr; }
+    .span-2, .span-4 { grid-column: span 1; }
+}
+/* ---------- 筛选工具条（维度：日报 / 周报 / 月报 + 时间窗口前后回看）
+     对齐 App「机群数据-单机 / 机群」的交互；屏幕端可见，打印时自动隐藏 ---------- */
+.rpt-toolbar {
+    position: sticky; top: 0; z-index: 6;    /* 长页滚动时吸顶，随时可切周期 */
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 10px 14px; background: #fff; border: 1px solid #eceef2; border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(22,26,46,.04);
+}
+.seg { display: inline-flex; padding: 3px; background: #F1F1F1; border-radius: 7px; }
+.seg-btn {
+    padding: 6px 16px; border: none; background: transparent; border-radius: 5px;
+    font: inherit; font-size: 13px; color: #666; cursor: pointer;
+}
+.seg-btn:hover { color: var(--sany-red); }
+.seg-btn.active { background: #fff; color: var(--sany-red); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.date-inline { display: inline-flex; align-items: center; gap: 8px; }
+.date-nav {
+    width: 28px; height: 28px; border: 1px solid #E3E5EA; background: #fff; border-radius: 6px;
+    color: #5A6472; font-size: 15px; line-height: 1; cursor: pointer; font-family: inherit;
+}
+.date-nav:hover:not(:disabled) { border-color: var(--sany-red); color: var(--sany-red); }
+.date-nav:disabled { opacity: .45; cursor: not-allowed; }
+.date-main { min-width: 220px; text-align: center; font-size: 13px; font-weight: 600; color: var(--ink); }
+/* 工具条行内的元信息靠右，与左侧的切换器拉开 */
+.rpt-toolbar .dash-meta { margin-left: auto; }
+
+/* ---------- 指标卡 ---------- */
+.metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+}
+.metric {
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid #eceef2;
+    border-top: 4px solid var(--sany-red);
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(22,26,46,.04);
+}
+.metric .label { font-size: 12px; color: #575757; letter-spacing: .5px; }
+.metric .number { margin-top: 6px; font-size: 26px; font-weight: 800; color: var(--sany-red); white-space: nowrap; }
+/* 数值较长时（如「2,864h 30m」「31,286.0」）字号降一档，避免在 1/4 栏宽里溢出卡片 */
+.metrics.dense .metric .number { font-size: 20px; }
+.metric .unit { font-size: 12px; color: #A0A0A0; }
+/* ---------- 版式 ---------- */
+/* 组件卡：白底 + 圆角 + 细描边（仪表盘风格） */
+.section {
+    margin: 0; padding: 14px 16px 16px;
+    background: #fff; border: 1px solid #eceef2; border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(22,26,46,.04);
+    display: flex; flex-direction: column;   /* 卡片内纵向排布：标题 / 注记 / 图形 */
+}
+/* 指标卡组：自身不画卡片，里面的 .metric 才是卡片（与线上仪表盘一致） */
+.section.plain { background: none; border: 0; box-shadow: none; padding: 0; }
+.span-2 { grid-column: span 2; }
+.span-4 { grid-column: span 4; }
+.section-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+/* 指标卡组的说明文字（跟在标题后面同一行） */
+.row-note { font-size: 11px; color: #98a0ad; line-height: 1.6; }
+.comp-tag {
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 700;
+    color: #575757;
+    background: #EFEFEF;
+    border: 1px solid #CACACA;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: .5px;
+}
+.comp-title { font-size: 13px; font-weight: 700; color: var(--ink); }
+/* 规则注记：把该组件的口径 / 上限 / 单位约束写在图旁，配置时不用翻规范 */
+.rule-note {
+    margin: 0 0 10px;
+    padding-left: 10px;
+    border-left: 2px solid #DCDCDC;
+    font-size: 11px;
+    color: #8b90a0;
+    line-height: 1.6;
+}
+/* ---------- 图表容器 ---------- */
+.chart-wrap svg { width: 100%; height: auto; display: block; }
+/* 图形在卡片内纵向居中（卡片被拉高时不会顶在上面）；环形图固定设计宽、居中显示 */
+.section .chart-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+#chart-ring { max-width: 460px; width: 100%; margin: 0 auto; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: 11px; color: #575757; }
+.chart-legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+/* ---------- 横向排行榜（机群柱状图） ---------- */
+.hbar { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 12px; }
+.hbar .n { width: 96px; color: #575757; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hbar .t { flex: 1; height: 14px; background: #f4f4f4; border-radius: 3px; overflow: hidden; }
+.hbar .t b { display: block; height: 100%; background: var(--sany-red); border-radius: 3px;
+             -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.hbar .v { width: 86px; text-align: right; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+/* ---------- 表格（与版式基准 单机报表模版.html 同款） ---------- */
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th {
+    background: #575757;
+    color: #fff;
+    padding: 8px;
+    text-align: left;
+    font-weight: 600;
+    letter-spacing: .5px;
+}
+td { padding: 7px 8px; border-bottom: 1px solid #f0f0f0; }
+tr:nth-child(even) td { background: #fafafa; }
+/* 指标字段（数值列）统一居中对齐（表头 + 数值同侧，2026-10-16 统一两页口径） */
+td.num, th.num { text-align: center; }
+/* 半宽卡（span-2）里的表格：紧凑排版，首列不换行 */
+.span-2 table { font-size: 11.5px; }
+.span-2 th, .span-2 td { padding: 6px 7px; }
+.span-2 th:first-child, .span-2 td:first-child { white-space: nowrap; }
+/* 表头可点击快速排序（屏幕端增强；报表转 PDF 时按默认序＝工时降序输出） */
+th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+th.sortable::after { content: "⇅"; margin-left: 6px; opacity: .45; font-weight: 400; }
+th.sortable.sorted::after { content: "▼"; opacity: 1; }
+th.sortable.sorted.asc::after { content: "▲"; }
+/* 紧跟图形之后的表格：表头与图形之间留出间距 */
+/* ---------- 打印兜底（以网页预览为主，不再按 A4 排版）---------- */
+@media print {
+    body { background: #fff; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .rpt-toolbar { display: none !important; }
+    .section, .metric { break-inside: avoid; page-break-inside: avoid; }
+    thead { display: table-header-group; }
+}
+
+/* ============================================================================
+   外壳：顶部栏 + 侧边导航（与同目录「报表模版.html」完全一致，用户 2026-10-16 要求补上）
+   · 有外壳时内边距交给 .main-content，.dash 不再重复留白
+   · 被报表模版页以 iframe 嵌入预览时用 ?embed=1 → 隐藏外壳，避免出现双层导航
+   ============================================================================ */
+.app-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main-wrapper {
+    display: flex;
+    flex: 1;
+}
+
+/* 顶部导航栏 */
+.navbar {
+    height: 50px;
+    background: #fff;
+    border-bottom: 1px solid #e8e8e8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    flex-shrink: 0;
+}
+
+.navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: 700;
+    color: #E60012;
+    letter-spacing: -0.5px;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 14px;
+    color: #666;
+}
+
+.navbar-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.navbar-item:hover {
+    color: #E60012;
+}
+
+.navbar-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    overflow: hidden;
+}
+
+/* 侧边栏 */
+.sidebar {
+    width: 210px;
+    background: #fff;
+    border-right: 1px solid #e8e8e8;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 8px 0;
+}
+
+.sidebar-item {
+    position: relative;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    font-size: 14px;
+    color: #666;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.sidebar-link:hover {
+    color: #E60012;
+    background: #fff5f5;
+}
+
+.sidebar-item.active > .sidebar-link,
+.sidebar-link.active {
+    background: #E60012;
+    color: #fff;
+    font-weight: 500;
+}
+
+.sidebar-item.active > .sidebar-link:hover,
+.sidebar-link.active:hover {
+    background: #cc0010;
+    color: #fff;
+}
+
+.sidebar-submenu {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar-submenu .sidebar-link {
+    padding-left: 42px;
+    font-size: 13px;
+}
+
+.sidebar-icon {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* 主内容区 */
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    background: #f5f6f8;
+}
+
+.container {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+}
+.main-wrapper .dash { max-width: none; padding: 0; }
+html.embed .navbar, html.embed .sidebar { display: none; }
+html.embed .main-content { padding: 16px 20px 24px; }
+html.embed .dash { max-width: none; padding: 0; }
+</style>
+</head>
+<body>
+<div class="app-wrapper">
+        <nav class="navbar">
+        <div class="navbar-left">
+            <span class="logo">MySANY</span>
+        </div>
+        <div class="navbar-right">
+            <div class="navbar-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                简体中文
+            </div>
+            <div class="navbar-item" title="个人中心">
+                <span>Schuck</span>
+                <div class="navbar-avatar"></div>
+            </div>
+        </div>
+    </nav>
+    <div class="main-wrapper">
+                <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a class="sidebar-link">
+                        <span class="sidebar-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
+                        </span>
+                        设备管理
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link">
+                        <span class="sidebar-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
+                        </span>
+                        数据大屏
+                    </a>
+                </li>
+                <li class="sidebar-item active">
+                    <a class="sidebar-link active" href="报表模版.html">
+                        <span class="sidebar-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><path d="M3 9h18"></path><path d="M9 21V9"></path></svg>
+                        </span>
+                        机群报表
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link">
+                        <span class="sidebar-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                        </span>
+                        项目管理
+                    </a>
+                    <ul class="sidebar-submenu">
+                        <li class="sidebar-item"><a class="sidebar-link" href="javascript:;">项目管理</a></li>
+                    </ul>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link">
+                        <span class="sidebar-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        </span>
+                        设备保养
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link">
+                        <span class="sidebar-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                        </span>
+                        维修管理
+                    </a>
+                </li>
+            </ul>
+        </aside>
+        <main class="main-content">
+<div class="dash">
+
+    <!-- 页头（仪表盘式）：原 A4 报表头（SANY 字标 / 元信息条 / 双线）与页脚已按需求删除 -->
+    <div class="dash-head">
+        <div class="dh-left">
+            <a class="dh-back" href="报表模版.html" title="返回报表列表" aria-label="返回报表列表">‹</a>
+            <span class="dash-title" id="repName">设备综合报表</span><span class="dash-scope">单机</span>
+        </div>
+        <div class="dh-right">
+            <div class="seg" id="dimTabs">
+            <button type="button" class="seg-btn active" data-dim="day">日报</button>
+            <button type="button" class="seg-btn" data-dim="week">周报</button>
+            <button type="button" class="seg-btn" data-dim="month">月报</button>
+        </div>
+        <div class="date-inline">
+            <button type="button" class="date-nav" id="navPrev" title="查看更早的周期">‹</button>
+            <span class="date-main" id="dateMain">{{统计周期}}</span>
+            <button type="button" class="date-nav" id="navNext" title="回到更新的周期" disabled>›</button>
+        </div>
+        </div>
+    </div>
+
+
+    <!-- 【筛选工具条】日报 / 周报 / 月报 + 时间窗口前后回看（对齐 App「机群数据-单机」的交互）
+         交互只作用于屏幕端：打印 / 转 PDF 时自动隐藏，报表按当前所选周期输出 -->
+    <div class="rpt-toolbar" id="rptToolbar">
+        <label class="dh-pick">设备切换
+                <select id="devPick" title="切换设备后整页数据按其重算"></select>
+            </label>
+            <div class="dash-meta"><span id="metaSn" data-field="deviceSn">{{资产编号}}</span> · <span id="metaModel" data-field="deviceModel">{{设备机型}}</span> · <span data-field="period">{{统计周期}}</span></div>
+    </div>
+
+    <div class="main">
+        <!-- ===== 组件 1：指标卡（一张一指标；单机 = 单台设备的期末值） ===== -->
+        <div class="section plain span-4">
+            <div class="section-head"><span class="comp-title" id="tCards">关键指标 · 本期（单台设备）</span><span class="comp-tag">指标卡</span></div>
+            <span class="row-note">规则：一张卡只放 1 个指标，单行 ≤4 张（超过 4 张拆第二行）；卡片顺序按照后台配置顺序固定。数值＝当前所选周期窗口内的合计。</span>
+            <div class="metrics">
+                <div class="metric"><div class="label">工时</div><div class="number" id="mHours">—</div><div class="unit">h</div></div>
+                <div class="metric"><div class="label">怠速工时</div><div class="number" id="mIdle">—</div><div class="unit">h</div></div>
+                <div class="metric"><div class="label">行驶时长</div><div class="number" id="mDrive">—</div><div class="unit">h</div></div>
+                <div class="metric"><div class="label">里程</div><div class="number" id="mMileage">—</div><div class="unit">km</div></div>
+            </div>
+        </div>
+        <!-- ===== 组件 2：折线图（单机口径 = 多指标 ≤5、必须同单位；此处 3 条线均为 h） ===== -->
+        <div class="section span-4">
+            <div class="section-head"><span class="comp-title" id="tLine">工时结构趋势（近 7 天 · 日粒度）</span><span class="comp-tag">折线图</span></div>
+            <div class="rule-note">规则：单机折线可绑 ≤5 个指标。刻度：节点 &gt; 7 时倾斜 40°；溢出 12 个时抽稀到 12 个。</div>
+                        <div class="chart-wrap" id="chart-line"></div>
+        </div>
+        <!-- ===== 组件 3 + 4：柱状图（垂直）/ 环形图（各占 50% 半宽并排） ===== -->
+        <div class="section span-2">
+            <div class="section-head"><span class="comp-title" id="tBarV">月度工时构成（近 12 个月 · 3 指标）</span><span class="comp-tag">柱状图</span></div>
+            <div class="rule-note">规则：柱状图可绑 ≤5 个指标；多指标在同一时间块内并排显示、一个指标一个柱色（与折线图同一套颜色顺序）；节点 ≤7 个时柱顶标数值，多指标并排时只标第 1 个指标。日按日，周按日，月按周统计聚合。</div>
+                        <div class="chart-wrap" id="chart-bar-v"></div>
+        </div>
+        <div class="section span-2">
+            <div class="section-head"><span class="comp-title">工时构成（作业 / 行驶 / 怠速）</span><span class="comp-tag">环形图</span></div>
+            <div class="rule-note">规则：环形图看<b>构成比例</b>，单机可 ≤5 个指标；中心显示合计。</div>
+                        <div class="chart-wrap" id="chart-ring"></div>
+        </div>
+
+        <!-- ===== 组件 5：柱状图·水平（单机口径 = 同一组件的另一种排布；X 轴＝数值、Y 轴＝时间周期） ===== -->
+        <div class="section span-2">
+            <div class="section-head"><span class="comp-title" id="tBarH">工时对比（近 7 天 · 水平排布）</span><span class="comp-tag">柱状图</span></div>
+            <div class="rule-note">规则：X 轴＝指标数值、Y 轴＝时间周期，类目按时间排列（近 7 个周期）；首个指标末端标最大数值，多指标并排时只标第 1 个指标。</div>
+            <div class="chart-wrap" id="chart-bar-h"></div>
+        </div>
+
+        <!-- ===== 组件 6：数据明细表（单机口径 = 行＝时间序列、列＝指标） ===== -->
+        <div class="section span-2">
+            <div class="section-head"><span class="comp-title" id="tTable">周期明细（近 7 天 · 日粒度）</span><span class="comp-tag">数据明细</span></div>
+            <div class="rule-note">规则：行＝时间序列（日 / 周 / 月 / 班次），列＝指标名称（一列一个指标、各列单位可不同，不受「同单位」约束）；某时间切片缺数据时单元格输出「-」，不补 0。</div>
+            <table>
+                <thead><tr><th style="width:16%">周期</th><th class="num">工时（h）</th><th class="num">行驶时长（h）</th><th class="num">怠速工时（h）</th><th class="num">里程（km）</th></tr></thead>
+                <tbody id="detailBody">
+                    <tr><td>9/21</td><td class="num">37.0</td><td class="num">14.0</td><td class="num">1.8</td><td class="num">407.4</td></tr>
+                    <tr><td>9/20</td><td class="num">35.4</td><td class="num">12.6</td><td class="num">1.6</td><td class="num">391.9</td></tr>
+                    <tr><td>9/19</td><td class="num">39.0</td><td class="num">14.0</td><td class="num">2.1</td><td class="num">422.9</td></tr>
+                    <tr><td>9/18</td><td class="num">42.6</td><td class="num">15.1</td><td class="num">1.5</td><td class="num">440.5</td></tr>
+                    <tr><td>9/17</td><td class="num">36.0</td><td class="num">12.8</td><td class="num">1.8</td><td class="num">383.7</td></tr>
+                    <tr><td>9/16</td><td class="num">40.2</td><td class="num">14.6</td><td class="num">2.4</td><td class="num">416.0</td></tr>
+                    <tr><td>9/15</td><td class="num">38.4</td><td class="num">13.2</td><td class="num">1.2</td><td class="num">397.6</td></tr>
+                    <tr class="sum-row"><td><b>合计</b></td><td class="num"><b>268.6</b></td><td class="num"><b>96.3</b></td><td class="num"><b>12.4</b></td><td class="num"><b>2,860.0</b></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+        </main>
+    </div>
+</div>
+
+<script>
+    /* 被「报表模版」页以 iframe 嵌入预览时（?embed=1）：隐藏顶部栏与侧边栏，只留报表本体；
+       同时接住宿主页带过来的报表名（?report=xxx），让本页标题显示点开的那张报表 */
+    (function () {
+        if (/[?&]embed=1/.test(location.search)) document.documentElement.classList.add('embed');
+        var rp = null;
+        try { rp = new URLSearchParams(location.search).get('report'); } catch (e) { /* 老浏览器忽略 */ }
+        var el = document.getElementById('repName');
+        if (rp && el) el.textContent = rp;
+    })();
+</script>
+
+<script>
+(function () {
+
+    /* 版式基准调色板：三一红 + 品牌黑 + 官方灰阶（第 1 色恒定三一红，其余按深浅递进） */
+    var RED = '#E60000', K = '#1A1A1A', G2 = '#575757', G3 = '#A0A0A0', G4 = '#CACACA', G5 = '#DCDCDC', OTHER = '#EFEFEF';
+    var GRID = '#dcdcdc', AXIS = '#a0a0a0', TXT = '#7c8798';
+    function svg(w, h, inner) { return '<svg viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>'; }
+    function put(id, markup) { var el = document.getElementById(id); if (el) el.innerHTML = markup; }
+    /* 图表按容器实际宽度绘制：W = 卡片内容宽度（PC 上文字/线宽保持设计尺寸，不再整体缩放） */
+    function wrapW(id, fallback) {
+        var el = document.getElementById(id);
+        var w = el ? Math.round(el.clientWidth) : 0;
+        return w >= 260 ? w : fallback;
+    }
+    function fmt(n, d) { return Number(n).toLocaleString('en-US', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); }
+    /* Y 轴网格：4 段，刻度值自适应（lo/hi 由数据决定，不写死） */
+    function gridY(W, H, padL, padR, padT, padB, lo, hi, unit, dec) {
+        var s = '';
+        for (var g = 0; g <= 4; g++) {
+            var y = padT + (H - padT - padB) * g / 4;
+            var v = hi - (hi - lo) * g / 4;
+            s += '<line x1="' + padL + '" y1="' + y.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + y.toFixed(1) + '" stroke="' + GRID + '" stroke-width="1"/>';
+            s += '<text x="' + (padL - 8) + '" y="' + (y + 4).toFixed(1) + '" text-anchor="end" font-size="14" fill="' + AXIS + '">' + v.toFixed(dec === undefined ? 0 : dec) + (g === 0 && unit ? ' ' + unit : '') + '</text>';
+        }
+        return s;
+    }
+    /* X 轴网格（横向柱状 / 条形图用）：4 段纵向网格线，刻度值标在底部，单位只在末刻度出现一次 */
+    function gridX(W, H, padL, padR, padT, padB, lo, hi, unit, dec) {
+        var s = '', y0 = padT, y1 = H - padB;
+        for (var g = 0; g <= 4; g++) {
+            var x = padL + (W - padL - padR) * g / 4;
+            var v = lo + (hi - lo) * g / 4;
+            s += '<line x1="' + x.toFixed(1) + '" y1="' + y0 + '" x2="' + x.toFixed(1) + '" y2="' + y1 + '" stroke="' + GRID + '" stroke-width="1"/>';
+            s += '<text x="' + x.toFixed(1) + '" y="' + (y1 + 18) + '" text-anchor="middle" font-size="12" fill="' + AXIS + '">' + v.toFixed(dec === undefined ? 0 : dec) + (g === 4 && unit ? ' ' + unit : '') + '</text>';
+        }
+        return s;
+    }
+    /* X 轴刻度：节点 > 10 倾斜 40°，并按步长抽稀到约 12 个（末点必标） */
+    function labelsX(labels, X, H, fontDefault) {
+        var n = labels.length, step = Math.max(1, Math.ceil(n / 12)), tilt = n > 10, s = '';
+        labels.forEach(function (t, i) {
+            if ((n - 1 - i) % step !== 0) return;
+            var x = X(i).toFixed(1), y = H - 52;
+            s += tilt
+                ? '<text x="' + x + '" y="' + y + '" text-anchor="end" font-size="14" fill="' + TXT + '" transform="rotate(-40 ' + x + ' ' + y + ')">' + t + '</text>'
+                : '<text x="' + x + '" y="' + (H - 30) + '" text-anchor="middle" font-size="14" fill="' + TXT + '">' + t + '</text>';
+        });
+        return s;
+    }
+    function legend(items) {
+        return items.map(function (it) {
+            return '<span><i style="background:' + it.c + '"></i>' + it.n + '</span>';
+        }).join('');
+    }
+
+    /* ======================================================================
+       筛选与重绘（2026-10-16）：对齐 App「机群数据-单机」的交互 —— 日报 / 周报 / 月报
+       + 时间窗口可前后回看；切换后指标卡、折线、柱状、环形、明细表全部按所选粒度重算。
+
+       · 数据源 18 个周期（确定性生成，刷新不变）：柱图要 12 个，其余要 7 个，
+         因此最多可往前回看 6 个周期（MAX_BACK）。
+       · 真实接口接入后：把 buildSeries() 换成后端返回的结果集即可，
+         其余渲染 / 交互代码不用动。
+       ====================================================================== */
+    var BUCKETS = 18, WIN = 7, WIN_BAR = 12, MAX_BACK = BUCKETS - WIN_BAR;
+
+    var DIM_META = {
+        day:   { tab: '日报', unitTxt: '日', suffix: '日粒度', factor: 1 },
+        week:  { tab: '周报', unitTxt: '周', suffix: '周粒度', factor: 7 },
+        month: { tab: '月报', unitTxt: '个月', suffix: '月粒度', factor: 30 }
+    };
+    var STATE = { dim: 'day', back: 0, dev: 0 };
+
+    /* 可选设备清单（设备切换）：每台设备一套日均基准值（工时 = 作业 + 行驶 + 怠速；里程 / 行驶时长 ≈ 51 km/h）。
+       真实接口接入后，把这份清单换成后端返回的「可选设备列表」即可，其余渲染逻辑不用动 */
+    var DEVICE_LIST = [
+        { no: 'SYT6E9CA0003', name: '长沙牵引车3号', model: '电动牵引车 T6（轻卡）', hours: 7.24, drive: 4.62, idle: 1.18, mileage: 235.6 },
+        { no: 'SYT6E9CA0001', name: '长沙牵引车1号', model: '电动牵引车 T6（轻卡）', hours: 7.86, drive: 5.04, idle: 1.31, mileage: 258.4 },
+        { no: 'SYT6E9CA0007', name: '长沙牵引车7号', model: '电动牵引车 T6（重卡）', hours: 6.58, drive: 4.11, idle: 0.96, mileage: 208.7 },
+        { no: 'SYT6E9CA0005', name: '长沙牵引车5号', model: '电动牵引车 T6（重卡）', hours: 7.02, drive: 4.48, idle: 1.24, mileage: 226.3 },
+        { no: 'SYT6E9CA0009', name: '长沙牵引车9号', model: '电动牵引车 T6（轻卡）', hours: 6.21, drive: 3.86, idle: 1.06, mileage: 194.2 },
+        { no: 'SYT6E9CA0010', name: '长沙牵引车10号', model: '电动牵引车 T6（重卡）', hours: 8.12, drive: 5.22, idle: 1.42, mileage: 267.5 }
+    ];
+    function curDev() { return DEVICE_LIST[STATE.dev] || DEVICE_LIST[0]; }
+
+    function dateLabel(dim, i) {
+        var last = new Date(2026, 8, 21);                        /* 演示：以 2026/09/21 为最新周期的末日 */
+        if (dim === 'day') {
+            var d = new Date(last); d.setDate(d.getDate() - (BUCKETS - 1 - i));
+            return (d.getMonth() + 1) + '/' + d.getDate();
+        }
+        if (dim === 'week') {
+            var e = new Date(last); e.setDate(e.getDate() - (BUCKETS - 1 - i) * 7);
+            var s = new Date(e); s.setDate(s.getDate() - 6);
+            return (s.getMonth() + 1) + '/' + s.getDate() + '-' + (e.getMonth() + 1) + '/' + e.getDate();
+        }
+        var m = new Date(2026, 8 - (BUCKETS - 1 - i), 1);
+        return (m.getMonth() + 1) + '月';
+    }
+    function buildSeries(dim) {
+        var d = curDev();                                        /* 当前所选设备的基准值 */
+        var f = DIM_META[dim].factor;
+        var ph = (dim === 'week' ? 2.1 : (dim === 'month' ? 4.3 : 0)) + STATE.dev * 0.7;   /* 不同设备波形错开 */
+        var out = { labels: [], hours: [], drive: [], idle: [], mileage: [] };
+        for (var i = 0; i < BUCKETS; i++) {
+            out.labels.push(dateLabel(dim, i));
+            out.hours.push(+(d.hours * f * (1 + Math.sin(i * 1.7 + ph) * 0.10)).toFixed(1));
+            out.drive.push(+(d.drive * f * (1 + Math.cos(i * 1.3 + ph) * 0.08)).toFixed(1));
+            out.idle.push(+(d.idle * f * (1 + Math.sin(i * 2.3) * 0.20)).toFixed(1));
+            out.mileage.push(+(d.mileage * f * (1 + Math.cos(i * 0.9) * 0.07)).toFixed(1));
+        }
+        return out;
+    }
+    var SER = {};
+    function seriesOf(dim) { if (!SER[dim]) SER[dim] = buildSeries(dim); return SER[dim]; }
+    /* 取「最近 count 个周期」：STATE.back = 往回看几个周期（0 = 最新窗口） */
+    function win(key, count) {
+        var s = seriesOf(STATE.dim);
+        var arr = (key === 'label') ? s.labels : s[key];
+        return arr.slice(BUCKETS - STATE.back - count, BUCKETS - STATE.back);
+    }
+    function sum(arr) { return arr.reduce(function (x, y) { return x + y; }, 0); }
+    function periodText() {
+        var L = win('label', WIN);
+        return L[0] + ' – ' + L[WIN - 1] + '（近 7 ' + DIM_META[STATE.dim].unitTxt + '）';
+    }
+
+    /* ---------- 指标卡：窗口内合计（全部由序列算出，不写死） ---------- */
+    function renderCards() {
+        var v = { hours: sum(win('hours', WIN)), drive: sum(win('drive', WIN)), idle: sum(win('idle', WIN)), mileage: sum(win('mileage', WIN)) };
+        document.getElementById('mHours').textContent = fmt(v.hours, 1);
+        document.getElementById('mIdle').textContent = fmt(v.idle, 1);
+        document.getElementById('mDrive').textContent = fmt(v.drive, 1);
+        document.getElementById('mMileage').textContent = fmt(v.mileage, 1);
+        return v;
+    }
+
+    /* ---------- 折线图（单机口径：多指标 ≤5、必须同单位）· X=近 7 个周期 · 3 指标均为 h ---------- */
+    function renderLine() {
+        var label = win('label', WIN);
+        var defs = [
+            { n: '工时 (h)', c: RED, v: win('hours', WIN) },
+            { n: '行驶时长 (h)', c: G2, v: win('drive', WIN) },
+            { n: '怠速工时 (h)', c: G4, v: win('idle', WIN) }
+        ];
+        var W = wrapW('chart-line', 960), H = 290, padL = 56, padR = 18, padT = 54, padB = 76;
+        var all = defs.reduce(function (a, d) { return a.concat(d.v); }, []);
+        var mn = Math.min.apply(null, all), mx = Math.max.apply(null, all), dd = (mx - mn) || 1;
+        var lo = Math.max(0, mn - dd * .18), hi = mx + dd * .12;
+        var X = function (i) { return padL + (W - padL - padR) * i / (label.length - 1); };
+        var Y = function (v) { return padT + (H - padT - padB) * (1 - (v - lo) / (hi - lo)); };
+        var s = gridY(W, H, padL, padR, padT, padB, lo, hi, 'h', 1);
+        defs.forEach(function (d, k) {
+            s += '<polyline points="' + d.v.map(function (v, i) { return X(i).toFixed(1) + ',' + Y(v).toFixed(1); }).join(' ') + '" fill="none" stroke="' + d.c + '" stroke-width="1.8" stroke-linejoin="round"/>';
+            d.v.forEach(function (v, i) { s += '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(v).toFixed(1) + '" r="2.6" fill="#fff" stroke="' + d.c + '" stroke-width="1.6"/>'; });
+            var gp = (W - padL - padR) / defs.length, lx = padL + k * gp;
+            s += '<line x1="' + lx + '" y1="16" x2="' + (lx + 16) + '" y2="16" stroke="' + d.c + '" stroke-width="2"/>';
+            s += '<text x="' + (lx + 22) + '" y="19.5" font-size="14" fill="' + TXT + '">' + d.n + '</text>';
+        });
+        s += labelsX(label, X, H);
+        put('chart-line', svg(W, H, s));
+    }
+
+    /* ---------- 柱状图·垂直（≤5 指标、必须同单位）· X=近 12 个周期 · 3 指标均为 h ----------
+       · 多指标在同一时间块内并排、一个指标一个柱色（与折线图同一套颜色顺序）
+       · 节点 > 7 个 → 不标数值（与注记「节点 ≤7 个时柱顶标数值」一致） */
+    function renderBarV() {
+        var label = win('label', WIN_BAR);
+        var defs = [
+            { n: '工时 (h)', c: RED, v: win('hours', WIN_BAR) },
+            { n: '行驶时长 (h)', c: G2, v: win('drive', WIN_BAR) },
+            { n: '怠速工时 (h)', c: G4, v: win('idle', WIN_BAR) }
+        ];
+        var W = wrapW('chart-bar-v', 960), H = 320, padL = 56, padR = 18, padT = 52, padB = 84;
+        var mx = 0;
+        defs.forEach(function (d) { d.v.forEach(function (v) { if (v > mx) mx = v; }); });
+        mx = mx * 1.15;                                          /* 顶部留白 */
+        var band = (W - padL - padR) / label.length;
+        var bw = Math.min(22, band * 0.62 / defs.length), gap = bw / 2;   /* 柱间距 ≥ 柱宽的 1/2 */
+        var groupW = bw * defs.length + gap * (defs.length - 1);
+        var Y = function (v) { return padT + (H - padT - padB) * (1 - v / mx); };
+        var s = gridY(W, H, padL, padR, padT, padB, 0, mx, 'h', 0);
+        label.forEach(function (t, i) {
+            var x0 = padL + band * i + (band - groupW) / 2;
+            defs.forEach(function (d, k) {
+                var x = x0 + k * (bw + gap), y = Y(d.v[i]);
+                s += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, H - padB - y).toFixed(1) + '" fill="' + d.c + '" rx="1"/>';
+            });
+            /* 节点 ≤ 7 才在柱顶标第 1 个指标的数值 */
+            if (label.length <= 7) {
+                s += '<text x="' + (x0 + bw / 2).toFixed(1) + '" y="' + (Y(defs[0].v[i]) - 6).toFixed(1) + '" text-anchor="middle" font-size="12" fill="' + G2 + '">' + defs[0].v[i] + '</text>';
+            }
+        });
+        var X = function (i) { return padL + band * (i + .5); };
+        s += labelsX(label, X, H);
+        defs.forEach(function (d, k) {
+            var lx = padL + k * 168;
+            s += '<rect x="' + lx + '" y="10" width="12" height="12" rx="3" fill="' + d.c + '"/>';
+            s += '<text x="' + (lx + 18) + '" y="20.5" font-size="14" fill="' + TXT + '">' + d.n + '</text>';
+        });
+        put('chart-bar-v', svg(W, H, s));
+    }
+
+    /* ---------- 柱状图·水平（同一组件的另一种排布）· Y=近 7 个周期 · 2 指标均为 h ----------
+       · 类目按时间排列（最新的在最上），与下方明细表同序
+       · 条端只标第 1 个指标（工时）的数值，避免两条数值互相压叠 */
+    function renderBarH() {
+        var label = win('label', WIN), hours = win('hours', WIN), drive = win('drive', WIN);
+        var rows = [];
+        for (var i = WIN - 1; i >= 0; i--) {                      /* 最新的排在最上 */
+            rows.push({ t: label[i], v: [hours[i], drive[i]] });
+        }
+        var names = [{ n: '工时 (h)', c: RED }, { n: '行驶时长 (h)', c: G2 }];
+        var W = wrapW('chart-bar-h', 960), H = 300, padL = 64, padR = 78, padT = 44, padB = 40;
+        var pitch = (H - padT - padB) / rows.length, bh = 9, gap = 3, groupH = bh * names.length + gap * (names.length - 1);
+        var mx = 0;
+        rows.forEach(function (r) { r.v.forEach(function (v) { if (v > mx) mx = v; }); });
+        mx = mx * 1.05;                                          /* 右侧留出数值标注的位置 */
+        var X = function (v) { return padL + (W - padL - padR) * v / mx; };
+        var s = gridX(W, H, padL, padR, padT, padB, 0, mx, 'h', 0);
+        /* 只给「首个指标＝最大值」那一条标数值（注记：首个指标末端标最大数值） */
+        var maxIdx = 0;
+        rows.forEach(function (r, i) { if (r.v[0] > rows[maxIdx].v[0]) maxIdx = i; });
+        rows.forEach(function (r, i) {
+            var top = padT + pitch * i + (pitch - groupH) / 2;
+            r.v.forEach(function (v, k) {
+                var y = top + k * (bh + gap);
+                s += '<rect x="' + padL + '" y="' + y.toFixed(1) + '" width="' + Math.max(1, X(v) - padL).toFixed(1) + '" height="' + bh + '" fill="' + names[k].c + '" rx="1"/>';
+            });
+            s += '<text x="' + (padL - 10) + '" y="' + (top + groupH / 2 + 4.5).toFixed(1) + '" text-anchor="end" font-size="13" fill="' + TXT + '">' + r.t + '</text>';
+            if (i === maxIdx) {
+                s += '<text x="' + (X(r.v[0]) + 6).toFixed(1) + '" y="' + (top + bh - 1).toFixed(1) + '" font-size="12" fill="' + G2 + '">' + r.v[0].toFixed(1) + '</text>';
+            }
+        });
+        names.forEach(function (nm, k) {
+            var lx = padL + k * 150;
+            s += '<rect x="' + lx + '" y="10" width="12" height="12" rx="3" fill="' + nm.c + '"/>';
+            s += '<text x="' + (lx + 18) + '" y="20.5" font-size="14" fill="' + TXT + '">' + nm.n + '</text>';
+        });
+        put('chart-bar-h', svg(W, H, s));
+    }
+
+    /* ---------- 环形图（单机口径：≤5 指标、同单位）· 工时构成（作业 / 行驶 / 怠速，均为 h） ---------- */
+    function renderRing(v) {
+        var items = [
+            { n: '作业工时', v: Math.max(0, v.hours - v.drive - v.idle), c: RED },
+            { n: '行驶时长', v: v.drive, c: G2 },
+            { n: '怠速工时', v: v.idle, c: G4 }
+        ];
+        var total = items.reduce(function (a, b) { return a + b.v; }, 0);
+        var W = 460, H = 240, cx = 112, cy = 120, r = 82;
+        function polar(deg) { var rad = (deg - 90) * Math.PI / 180; return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)]; }
+        var s = '', a = 0;
+        items.forEach(function (it) {
+            var to = a + it.v / total * 360, p0 = polar(a), p1 = polar(to), large = (to - a) > 180 ? 1 : 0;
+            s += '<path d="M ' + cx + ' ' + cy + ' L ' + p0[0].toFixed(1) + ' ' + p0[1].toFixed(1) + ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + p1[0].toFixed(1) + ' ' + p1[1].toFixed(1) + ' Z" fill="' + it.c + '"/>';
+            a = to;
+        });
+        s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * .62).toFixed(1) + '" fill="#fff"/>';
+        /* 中心：只留合计值 + 单位，直接用「小数 + h」写法（不写 268h 36m 这种 h:m） */
+        s += '<text x="' + cx + '" y="' + (cy + 6) + '" text-anchor="middle" font-size="18" font-weight="800" fill="#1a1a1a">' + total.toFixed(1) + 'h</text>';
+        items.forEach(function (it, k) {
+            var y = 62 + k * 40;
+            s += '<rect x="232" y="' + (y - 11) + '" width="12" height="12" rx="3" fill="' + it.c + '"/>';
+            s += '<text x="254" y="' + y + '" font-size="13" fill="#334155">' + it.n + '</text>';
+            s += '<text x="336" y="' + y + '" font-size="13" fill="#334155">' + it.v.toFixed(1) + ' h</text>';
+            s += '<text x="448" y="' + y + '" text-anchor="end" font-size="13" fill="#8b90a0">' + (it.v / total * 100).toFixed(1) + '%</text>';
+        });
+        put('chart-ring', svg(W, H, s));
+    }
+
+    /* ---------- 周期明细（行＝时间序列、列＝指标）· 最新周期在最上 ---------- */
+    function renderTable() {
+        var label = win('label', WIN), h = win('hours', WIN), dr = win('drive', WIN), idl = win('idle', WIN), mi = win('mileage', WIN);
+        var html = '';
+        for (var i = WIN - 1; i >= 0; i--) {
+            html += '<tr><td>' + label[i] + '</td><td class="num">' + fmt(h[i], 1) + '</td><td class="num">' + fmt(dr[i], 1) + '</td><td class="num">' + fmt(idl[i], 1) + '</td><td class="num">' + fmt(mi[i], 1) + '</td></tr>';
+        }
+        html += '<tr class="sum-row"><td><b>合计</b></td><td class="num"><b>' + fmt(sum(h), 1) + '</b></td><td class="num"><b>' + fmt(sum(dr), 1) + '</b></td><td class="num"><b>' + fmt(sum(idl), 1) + '</b></td><td class="num"><b>' + fmt(sum(mi), 1) + '</b></td></tr>';
+        document.getElementById('detailBody').innerHTML = html;
+    }
+
+    /* ---------- 统一重绘 + 工具条状态 ---------- */
+    function syncToolbar() {
+        Array.prototype.slice.call(document.querySelectorAll('#dimTabs .seg-btn')).forEach(function (b) {
+            b.classList.toggle('active', b.dataset.dim === STATE.dim);
+        });
+        document.getElementById('dateMain').textContent = periodText();
+        document.getElementById('navPrev').disabled = STATE.back >= MAX_BACK;   /* 再往前没有 12 个周期可画 */
+        document.getElementById('navNext').disabled = STATE.back <= 0;
+    }
+    function renderAll() {
+        var v = renderCards();
+        renderLine();
+        renderBarV();
+        renderBarH();
+        renderRing(v);
+        renderTable();
+        var m = DIM_META[STATE.dim];
+        document.getElementById('tLine').textContent = '工时结构趋势（近 7 ' + m.unitTxt + ' · ' + m.suffix + '）';
+        document.getElementById('tBarV').textContent = '工时构成（近 12 ' + m.unitTxt + ' · 3 指标）';
+        document.getElementById('tBarH').textContent = '工时对比（近 7 ' + m.unitTxt + ' · 水平排布）';
+        document.getElementById('tTable').textContent = '周期明细（近 7 ' + m.unitTxt + ' · ' + m.suffix + '）';
+        /* 页头：设备下拉 + 元信息跟随当前设备 */
+        var dev = curDev();
+        document.getElementById('metaSn').textContent = dev.no;
+        document.getElementById('metaModel').textContent = dev.model;
+        var pick = document.getElementById('devPick');
+        if (pick && pick.value !== String(STATE.dev)) pick.value = String(STATE.dev);
+        syncToolbar();
+    }
+    function switchDim(dim) {                                     /* 切维度＝回到最新周期（与 App 一致） */
+        if (!DIM_META[dim]) return;
+        STATE.dim = dim;
+        STATE.back = 0;
+        renderAll();
+    }
+    function shiftPeriod(delta) {                                 /* delta=+1 往更早的周期看 */
+        STATE.back = Math.min(MAX_BACK, Math.max(0, STATE.back + delta));
+        renderAll();
+    }
+    Array.prototype.slice.call(document.querySelectorAll('#dimTabs .seg-btn')).forEach(function (b) {
+        b.addEventListener('click', function () { switchDim(b.dataset.dim); });
+    });
+    document.getElementById('navPrev').addEventListener('click', function () { shiftPeriod(1); });
+    document.getElementById('navNext').addEventListener('click', function () { shiftPeriod(-1); });
+
+    /* 设备切换：换设备＝重建序列并整页重绘（同时回到最新周期，与切维度同一套语义） */
+    function switchDevice(idx) {
+        var n = Number(idx);
+        if (isNaN(n) || !DEVICE_LIST[n]) return;
+        STATE.dev = n;
+        STATE.back = 0;
+        SER = {};                                                 /* 设备换了，缓存序列失效 */
+        renderAll();
+    }
+    (function initDevicePicker() {
+        var pick = document.getElementById('devPick');
+        if (!pick) return;
+        pick.innerHTML = DEVICE_LIST.map(function (d, i) {
+            return '<option value="' + i + '">' + d.name + '（' + d.no.slice(-4) + '）</option>';
+        }).join('');
+        pick.value = String(STATE.dev);
+        pick.addEventListener('change', function () { switchDevice(pick.value); });
+    })();
+
+    renderAll();
+
+    /* 窗口尺寸变化（PC 端拉宽 / 缩放）后按新宽度重绘，保证清晰、不变形 */
+    var resizeTimer = null;
+    window.addEventListener('resize', function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(renderAll, 160);
+    });
+
+    /* 打印 / 转 PDF 前重绘一次，保证印出的是当前筛选的周期 */
+    window.addEventListener('beforeprint', function () { renderAll(); });
+
+})();
+</script>
+</body>
+</html>

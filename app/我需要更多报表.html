@@ -11,7 +11,7 @@
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     /* 手机端：去掉双击缩放等待，点按即时响应 */
-    button, label, .thumb, #reportPreview { touch-action: manipulation; }
+    button, label { touch-action: manipulation; }
     body {
         font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
         background: #f4f5f7; color: #1a1a1a; height: 100vh; overflow: hidden; display: flex; align-items: stretch;
@@ -64,10 +64,10 @@
     .field-hint { font-size: 11px; color: #a0a4ad; line-height: 1.5; margin: 0 2px 8px; }
 
     /* ================= 候选项（整卡可点，选中 = 卡片染色） ================= */
+    /* 2026-10-15：按用户要求去掉「图片预览」（预览胶囊 + 大图弹层），卡片只留文字 */
     .opt {
-        /* 文字在左、预览图在右：row-reverse 只改视觉顺序，DOM 顺序与点击/预览逻辑不变 */
-        position: relative; display: flex; flex-direction: row-reverse; align-items: center; gap: 12px; background: #fff;
-        border: 1.5px solid transparent; border-radius: 16px; padding: 12px; margin-bottom: 9px;
+        position: relative; display: block; background: #fff;
+        border: 1.5px solid transparent; border-radius: 16px; padding: 12px 14px; margin-bottom: 9px;
         box-shadow: 0 1px 3px rgba(22,26,46,.05); cursor: pointer;
         -webkit-user-select: none; user-select: none; touch-action: manipulation;
         transition: background .16s, border-color .16s, box-shadow .16s, transform .1s;
@@ -75,26 +75,39 @@
     .opt:active { transform: scale(.985); background: #fafbfc; }
     .opt input { position: absolute; opacity: 0; width: 0; height: 0; }
     .opt.checked { border-color: #f6a8ae; background: #fff7f7; box-shadow: 0 3px 14px rgba(230,0,18,.1); }
-    /* 预览按钮：只留一枚胶囊（缩略图与占位图都不显示，图片仍留在 DOM 里用于加载检测） */
-    .thumb {
-        position: relative; flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px;
-        height: 28px; padding: 0 10px; border-radius: 999px; white-space: nowrap;
-        background: #fff; border: 1px solid #e3e5ea; color: #5a6472;
-        font-size: 12px; line-height: 1; cursor: zoom-in;
-        transition: border-color .16s, color .16s, box-shadow .16s, transform .1s;
+    .opt-info { min-width: 0; }
+    /* 名称：多语言长单词（德语复合词等）必须能在卡片内断行，否则会横向溢出 */
+    .opt-name {
+        font-size: 14px; font-weight: 600; color: #161a2e; line-height: 1.4;
+        overflow-wrap: anywhere; word-break: break-word;
     }
-    .thumb:hover { border-color: #f6a8ae; color: #E60012; box-shadow: 0 2px 8px rgba(230,0,18,.14); }
-    .thumb:active { transform: scale(.96); }
-    .thumb img, .thumb-ph { display: none; }
-    .thumb .zoom {
-        display: inline-flex; align-items: center; gap: 4px;
-        font-size: 12px; line-height: 1; color: inherit; background: none;
+    /* 副标题（描述）：默认只显示 2 行 —— 多语言长文案不再把卡片撑得高矮不一；
+       第 2 行做渐隐，提示「后面还有」，但只有真被截断的卡片才出现「展开全文」胶囊 */
+    .opt-desc {
+        font-size: 12px; color: #8b90a0; line-height: 1.6; margin-top: 5px;
+        overflow-wrap: anywhere; word-break: break-word;
     }
-    .opt-info { flex: 1; min-width: 0; }
-    /* 窄屏：按钮再紧凑一点，保证「名称 + 描述」有足够宽度 */
-    @media (max-width: 380px) { .thumb { height: 26px; padding: 0 8px; font-size: 11px; } }
-    .opt-name { font-size: 14px; font-weight: 600; color: #161a2e; line-height: 1.4; }
-    .opt-desc { font-size: 12px; color: #8b90a0; line-height: 1.6; margin-top: 5px; }
+    .opt-desc .desc-txt {
+        display: -webkit-box; -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
+        -webkit-mask-image: linear-gradient(180deg, #000 58%, rgba(0,0,0,.3) 100%);
+        mask-image: linear-gradient(180deg, #000 58%, rgba(0,0,0,.3) 100%);
+    }
+    .opt-desc.open .desc-txt {
+        display: block; overflow: visible;
+        -webkit-mask-image: none; mask-image: none;
+    }
+    /* 「展开全文 / 收起」：很轻的小胶囊，展开后原地收起，不跳转、不弹窗 */
+    .desc-toggle {
+        display: inline-flex; align-items: center; gap: 3px; margin-top: 5px;
+        padding: 3px 9px; border: none; border-radius: 999px; background: #f2f4f7;
+        color: #5a6472; font-family: inherit; font-size: 11px; line-height: 1.2; cursor: pointer;
+        transition: background .15s, color .15s;
+    }
+    .desc-toggle:hover { background: #eaeef3; color: #161a2e; }
+    .desc-toggle svg { transition: transform .18s; }
+    .opt-desc.open .desc-toggle svg { transform: rotate(180deg); }
+    .opt.checked .desc-toggle { background: #fdecee; color: #E60012; }
 
     .note-input {
         width: 100%; min-height: 104px; border: 1px solid #eef0f3; border-radius: 16px; background: #fff;
@@ -118,26 +131,6 @@
     .btn-ghost { border: 1px solid #e3e5ea; background: #fff; color: #666; }
     .btn-primary { border: none; background: #E60012; color: #fff; box-shadow: 0 2px 8px rgba(230,0,18,.22); }
     .btn-primary:hover { background: #c40011; }
-
-    /* ================= 预览图放大 ================= */
-    #reportPreview {
-        position: fixed; inset: 0; background: rgba(0,0,0,.82); z-index: 80; display: none;
-        align-items: center; justify-content: center; cursor: zoom-out; padding: 16px;
-    }
-    #reportPreview.active { display: flex; }
-    #reportPreview img { max-width: 100%; max-height: 86vh; border-radius: 10px; display: block; }
-    /* 从缩略图位置缩放展开（transform-origin 由 JS 按点击位置设定） */
-    #reportPreview img.expand { animation: pvExpand .26s cubic-bezier(.16, 1, .3, 1); }
-    @keyframes pvExpand {
-        from { transform: scale(.16); opacity: 0; }
-        to { transform: scale(1); opacity: 1; }
-    }
-    #reportPreview .pv-fail {
-        display: none; padding: 18px 22px; border-radius: 12px;
-        background: rgba(255,255,255,.08); color: #fff; font-size: 13px; text-align: center; line-height: 1.7;
-    }
-    #reportPreview.failed img { display: none; }
-    #reportPreview.failed .pv-fail { display: block; }
 </style>
 </head>
 <body>
@@ -170,42 +163,32 @@
     </div>
 </div>
 
-<!-- ==================== 预览图放大 ==================== -->
-<div id="reportPreview" onclick="hidePreview()">
-    <img id="previewImg" alt="" onerror="this.onerror=null;tryLoadFallback(this)">
-    <div class="pv-fail">预览图暂时加载不出来<br>（本地打开时通常是被预览器拦了相对路径，用系统浏览器打开即可）</div>
-</div>
-
 <script>
 /* ========================================================================
  * 数据来源：V2/MysnayPC端V2/报表模版.html 的「我需要更多报表」弹窗
  * 候选项优先读后台配置（localStorage: mysany_more_report_options），未配置用内置默认
+ * 2026-10-15：本页不做图片预览（预览胶囊 / 大图弹层已删）
  * ====================================================================== */
+/* 内置默认清单：只保留中文（多语言仍支持 —— 后台配置里 name / desc 写成 { 'zh-CN': …, de: … } 即可被 pickLangText 取到）
+   候选项不再带预览图字段（本页不做图片预览） */
 const MORE_REPORT_OPTIONS = [
     { name: '超时工作报表',
-      image: '预览图/超时工作报表.png',
       desc: '统计设备超过设定工时阈值的时长、次数与占比，用于识别加班与合规风险。' },
     { name: '设备异常通知报表',
-      image: '预览图/设备异常通知报表.png',
       desc: '汇总异常事件的即时通知记录与处理情况：异常类型、发生时间、通知对象与处理状态。' },
     { name: '电池电量报表',
-      image: '预览图/电池电量报表.png',
       desc: '统计设备 / 机群的电池荷电状态（SOC）与充电情况：期末 SOC、最低 SOC、充电次数与充电时长。' },
     { name: '碳排放报表',
-      image: '预览图/碳排放报表.png',
       desc: '把燃油 / 电能消耗折算为碳排放量，支持按项目、机型、周期统计，用于 ESG 与绿色施工汇报。' },
     { name: '驾驶员行为评分报表',
-      image: '预览图/驾驶员行为评分报表.png',
       desc: '按急加速、急刹车、超速、怠速等事件给出机手的行为评分与排名，便于考核与培训。' },
     { name: '备件与保养消耗报表',
-      image: '预览图/备件与保养消耗报表.png',
       desc: '统计保养、维修产生的备件消耗与费用，按设备、项目与周期汇总。' }
 ];
 
 const REPORT_OPTIONS_KEY = 'mysany_more_report_options';
-// PC 端的预览图相对 V2/MysnayPC端V2/ 存放，本页在 V2/app/，需补前缀
-const IMG_BASE = '../MysnayPC端V2/';
-const DEFAULT_PREVIEW_IMAGE = IMG_BASE + '预览图/默认预览.png';
+/* 2026-10-15：按用户要求去掉本页的图片预览 —— 不再引用预览图、不再加载/放大图片
+   （后台配置里候选项可能仍带 image 字段，PC 端「报表模版」弹窗继续用，本页忽略） */
 
 const optionsBox = document.getElementById('options');
 const noteInput = document.getElementById('note');
@@ -259,18 +242,11 @@ function readConfiguredReportOptions() {
             if (!o) return null;
             return {
                 name: pickLangText(o.name),
-                desc: pickLangText(o.desc),
-                image: (typeof o.image === 'string' ? o.image : '')
+                desc: pickLangText(o.desc)
             };
         }).filter(function (o) { return o && o.name; });
         return list.length ? list : null;
     } catch (e) { return null; }
-}
-
-/* 图片路径：dataURL / 绝对路径原样用；后台配置里的相对路径按 PC 端目录解析 */
-function imgSrc(p) {
-    if (!p) return DEFAULT_PREVIEW_IMAGE;
-    return /^(data:|https?:|\.\.\/|\/)/.test(p) ? p : IMG_BASE + p;
 }
 
 function safe(v) {
@@ -280,66 +256,66 @@ function safe(v) {
 }
 
 /* ==================== 渲染候选项 ==================== */
-function renderOptions() {
-    // 优先取后台配置的清单，未配置时用内置默认
+/* 候选项清单：后台配置优先；内置默认也走一遍多语言取值（name / desc 允许写成 { 'zh-CN': …, de: … }） */
+function optionList() {
     const list = readConfiguredReportOptions() || MORE_REPORT_OPTIONS;
+    return list.map(function (o) {
+        return {
+            name: pickLangText(o.name),
+            desc: pickLangText(o.desc)
+        };
+    }).filter(function (o) { return o.name; });
+}
+
+function renderOptions() {
+    const list = optionList();
     optionsBox.innerHTML = list.map(function (o) {
         return '<label class="opt">'
             + '<input type="checkbox" value="' + safe(o.name) + '" onchange="updateSelCount()">'
-            + '<div class="thumb" role="button" aria-label="预览大图" onclick="showPreview(event, this)" title="点击预览大图">'
-            + '<img src="' + safe(imgSrc(o.image)) + '" alt=""'
-            + ' onload="this.parentElement.classList.remove(\'failed\')"'
-            + ' onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src=DEFAULT_PREVIEW_IMAGE;}else{this.parentElement.classList.add(\'failed\');}">'
-            + '<span class="thumb-ph"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3.5" width="18" height="17" rx="3.2"/><path d="M8 16.4V12.2"/><path d="M12 16.4V8.6"/><path d="M16 16.4V10.6"/></svg></span>'
-            + '<span class="zoom"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="16.5" y1="16.5" x2="21" y2="21"></line></svg>预览</span>'
-            + '</div>'
             + '<div class="opt-info">'
             + '<div class="opt-name">' + safe(o.name) + '</div>'
-            + '<div class="opt-desc">' + safe(o.desc) + '</div>'
+            + '<div class="opt-desc"><div class="desc-txt">' + safe(o.desc) + '</div></div>'
             + '</div></label>';
     }).join('');
+    markDescOverflow();      /* 渲染完量一次：只有真被截断的描述才挂「展开全文」 */
 }
 
-/* 预览图放大：点缩略图（整块都是按钮）出大图
-   要阻止冒泡到 label，否则会连带勾选复选框 */
-function showPreview(e, el) {
+/* 副标题是否被截断：被截断才补「展开全文」小胶囊（没截断的卡片保持干净） */
+function markDescOverflow() {
+    optionsBox.querySelectorAll('.opt-desc').forEach(function (box) {
+        const txt = box.querySelector('.desc-txt');
+        if (!txt) return;
+        const clipped = txt.scrollHeight - txt.clientHeight > 2;
+        box.classList.remove('open');
+        const old = box.querySelector('.desc-toggle');
+        if (old) old.remove();
+        if (!clipped) return;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'desc-toggle';
+        btn.innerHTML = '<span>展开全文</span>' + ARROW_DOWN;
+        btn.onclick = function (e) { toggleDesc(e, btn); };
+        box.appendChild(btn);
+    });
+}
+
+/* 展开 / 收起：原地切换，不弹窗、不跳页；点它不能连带勾选卡片（label 的默认行为要拦掉） */
+function toggleDesc(e, btn) {
     if (e) { e.preventDefault(); e.stopPropagation(); }
-    const img = el && el.querySelector ? el.querySelector('img') : null;
-    const box = document.getElementById('reportPreview');
-    const big = document.getElementById('previewImg');
-    /* 缩略图自己都没图（占位态）→ 用内置默认预览图，别把破图放大 */
-    const target = (img && img.naturalWidth > 0) ? img.getAttribute('src') : DEFAULT_PREVIEW_IMAGE;
-    box.classList.remove('failed');
-    big.dataset.fb = '';
-    /* 展开动画从缩略图位置长出来：把 transform-origin 设到缩略图中心 */
-    if (el && el.getBoundingClientRect) {
-        const r = el.getBoundingClientRect();
-        big.style.transformOrigin =
-            ((r.left + r.width / 2) / window.innerWidth * 100).toFixed(2) + '% ' +
-            ((r.top + r.height / 2) / window.innerHeight * 100).toFixed(2) + '%';
-    }
-    big.classList.remove('expand');
-    void big.offsetWidth;                 /* 重排一次，让动画可重复触发 */
-    big.src = target;
-    box.classList.add('active');
-    big.classList.add('expand');
+    const box = btn.closest('.opt-desc');
+    if (!box) return;
+    const open = box.classList.toggle('open');
+    btn.querySelector('span').textContent = open ? '收起' : '展开全文';
 }
 
-/* 大图兜底：一次失败换默认预览图，再失败就在弹层里给提示（不再显示破图） */
-function tryLoadFallback(img) {
-    if (!img.dataset.fb) { img.dataset.fb = '1'; img.src = DEFAULT_PREVIEW_IMAGE; return; }
-    document.getElementById('reportPreview').classList.add('failed');
-}
-
-function hidePreview() {
-    document.getElementById('reportPreview').classList.remove('active');
-    document.getElementById('reportPreview').classList.remove('failed');
-    document.getElementById('previewImg').src = '';
-}
-
-document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && document.getElementById('reportPreview').classList.contains('active')) hidePreview();
+/* 屏幕宽度变化（横竖屏 / 窗口缩放）后重新量一次截断状态 */
+let descTimer = null;
+window.addEventListener('resize', function () {
+    clearTimeout(descTimer);
+    descTimer = setTimeout(markDescOverflow, 120);
 });
+
+const ARROW_DOWN = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
 
 /* ==================== 提交 ==================== */
 function submit() {
