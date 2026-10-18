@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>手机端 · 机群报表（v2.0）</title>
+<title>机群数据-机群</title>
 <style>
     /* ========================================================================
      * 字号等级（全页只用这 6 档 + 弹层滚轮 1 档，避免大小混乱）
@@ -694,7 +694,7 @@
         flex-shrink: 0; display: flex; align-items: center; gap: 8px;
         padding: 10px 14px; border-top: 1px solid #f2f3f6;
     }
-    .pf-count { margin-right: auto; font-size: 12px; color: #8b90a0; }
+    .pf-count { margin-left: auto; font-size: 12px; color: #8b90a0; }
     .pf-count b { color: #E60012; font-weight: 600; }
     .pf-btn {
         font-family: inherit; font-size: 12px; padding: 6px 12px; border-radius: 999px;
@@ -742,6 +742,12 @@
     .dlg-btn.ghost:hover { border-color: #cfd3da; }
     .dlg-btn.primary { flex: 1; background: #E60012; border: 1px solid #E60012; color: #fff; font-weight: 600; }
     .dlg-btn.primary:hover { background: #c40011; border-color: #c40011; }
+.pick-target { display: flex; gap: 8px; padding: 0 16px 8px; }
+    .pick-target .pt-btn {
+        flex: 1; height: 32px; border-radius: 16px; font-family: inherit; font-size: 13px;
+        color: #5a6472; background: #f4f5f7; border: 1px solid #eef0f3; cursor: pointer;
+    }
+    .pick-target .pt-btn.active { color: #fff; background: #E60012; border-color: #E60012; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -823,11 +829,11 @@
             <div class="picker-col models" id="pickerModels"></div>
         </div>
 
-        <!-- 快捷操作：全选（当前筛选下全部）/ 清空 + 已选计数 -->
+        <!-- 快捷操作：全选（当前筛选下全部）/ 清空 + 已选计数（2026-10-18 左右互换：按钮左、计数右） -->
         <div class="picker-foot">
-            <span class="pf-count" id="pickerCount"></span>
             <button class="pf-btn" id="pfAll" onclick="pickAll()">全选本类</button>
             <button class="pf-btn" onclick="pickClear()">清空</button>
+            <span class="pf-count" id="pickerCount"></span>
         </div>
         <div class="dlg-btns">
             <button class="dlg-btn ghost" onclick="resetMachinePicker()">重置</button>
@@ -933,8 +939,12 @@
 <div class="picker-mask" id="datePicker" onclick="closeDatePicker()">
     <div class="picker-sheet date-sheet" onclick="event.stopPropagation()">
         <div class="picker-head">
-            <span class="picker-title">请选择</span>
+            <span class="picker-title">请选择区间</span>
             <span class="picker-close" onclick="closeDatePicker()">✕</span>
+        </div>
+        <div class="pick-target">
+            <button type="button" class="pt-btn" id="ptStart" onclick="setPickTarget('start')">开始</button>
+            <button type="button" class="pt-btn active" id="ptEnd" onclick="setPickTarget('end')">结束</button>
         </div>
         <div class="wheel-wrap">
             <div class="wheel-lines"></div>
@@ -1211,6 +1221,7 @@ let state = {
     machineId: 'EX001',            /* 已选第一台：头像 / 分享图等单点场景用（渲染时会同步） */
     machineIds: defaultSelection(),/* 已选设备集合（默认 10 台）—— 机群口径：KPI / 图表 / 明细都按这批设备汇总 */
     endIndex: DAYS - 1,
+    startIndex: DAYS - 7,          /* 2026-10-18：开始周期（与 endIndex 组成区间，默认近 7 格） */
     pageState: 'data',
     chartView: {},                 /* 图表卡片视图：key → 'chart' | 'table'（默认图表；切周期不重置） */
     chartSort: {},                /* 数据台账排序：key → { col, dir }（图表明细表已不做排序） */
@@ -1243,11 +1254,14 @@ function weekNoOfMonth(d) {
 }
 
 function periodLabel() {
-    const d = dateOf(state.endIndex);
-    const ymd = d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0');
-    if (state.period === 'day') return ymd + '/' + String(d.getDate()).padStart(2, '0');
-    if (state.period === 'week') return ymd + ' W' + weekNoOfMonth(d);   /* 例：2026/09 W2 */
-    return ymd;
+    const s = dateOf(state.startIndex), e = dateOf(state.endIndex);
+    const ym = (d) => d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0');
+    if (state.period === 'day') {
+        if (state.startIndex === state.endIndex) return ym(e) + '/' + String(e.getDate()).padStart(2, '0');
+        return mdShort(s) + ' ~ ' + mdShort(e);
+    }
+    if (state.period === 'week') return ym(s) + ' W' + weekNoOfMonth(s) + ' ~ ' + ym(e) + ' W' + weekNoOfMonth(e);
+    return ym(s) + ' ~ ' + ym(e);
 }
 
 /* ==================== 渲染：手机端适配器 ==================== */
@@ -1304,6 +1318,12 @@ function h1(v) {
    · 机群折线图 = 一台设备一条线（色相按设备序号铺开，同一个 Y 轴刻度）
    · 机群单次最多 10 台：图里只画前 10 台（演示资产 100 台），其它组件给全量 */
 const CHART_NODES = { day: 7, week: 7, month: 7 };
+/* 2026-10-18：开始/结束区间 → 图表格数（1~12 格） */
+function spanNodes() {
+    const n = Math.max(1, (state.endIndex || 0) - (state.startIndex || 0) + 1);
+    return Math.min(12, n);
+}
+function syncNodes() { CHART_NODES[state.period] = spanNodes(); }
 
 /* 近 N 格的「时间区间」（from~to 为日索引；只保留与数据窗口有交集的格子） */
 function chartRanges() {
@@ -1737,6 +1757,7 @@ function xlsTableHTML(key, gridCols, head, rows, foot) {
 }
 
 function render() {
+    syncNodes();
     const ids = selIds();
     const curM = MACHINES.filter(m => m.id === ids[0])[0] || MACHINES[0];
     /* 标题回显（点右侧 ▼ 打开选择器）：
@@ -1952,6 +1973,7 @@ function bindOneTableDrag(box) {
 function switchPeriod(p) { state.period = p; state.endIndex = DAYS - 1; render(); }
 
 function shiftDate(delta) {
+    const span = Math.max(0, state.endIndex - state.startIndex);
     if (state.period === 'month') {
         /* 月报：跳到「上一个月 / 下一个月」的最后一天 */
         const d = dateOf(state.endIndex);
@@ -1961,6 +1983,7 @@ function shiftDate(delta) {
         const step = state.period === 'day' ? 1 : 7;
         state.endIndex = Math.min(DAYS - 1, Math.max(0, state.endIndex + delta * step));
     }
+    state.startIndex = Math.max(0, state.endIndex - span);
     render();
 }
 
@@ -2367,12 +2390,23 @@ function settleWheel(kind, i) {
     }
 }
 
+let pickTarget = 'end';
+function setPickTarget(t) {
+    pickTarget = (t === 'start') ? 'start' : 'end';
+    document.getElementById('ptStart').classList.toggle('active', pickTarget === 'start');
+    document.getElementById('ptEnd').classList.toggle('active', pickTarget === 'end');
+    openDatePicker();
+}
+
 function openDatePicker() {
-    const d = dateOf(state.endIndex);
+    const d = dateOf(pickTarget === 'start' ? state.startIndex : state.endIndex);
+    document.getElementById('ptStart').classList.toggle('active', pickTarget === 'start');
+    document.getElementById('ptEnd').classList.toggle('active', pickTarget === 'end');
     Object.assign(dateCols, buildDateCols(d.getFullYear(), d.getMonth() + 1));
     /* 第三列默认选中「包含当前日期」的那一项 */
+    const cur = (pickTarget === 'start' ? state.startIndex : state.endIndex);
     let t = dateCols.thirds.reduce((best, o, i) =>
-        Math.abs(o.endIndex - state.endIndex) < Math.abs(dateCols.thirds[best].endIndex - state.endIndex) ? i : best, 0);
+        Math.abs(o.endIndex - cur) < Math.abs(dateCols.thirds[best].endIndex - cur) ? i : best, 0);
     dateCols.t = dateCols.thirds.length ? t : 0;
     bindWheel('colYear', 'y'); bindWheel('colMonth', 'm'); bindWheel('colThird', 't');
     /* 先显示再画：隐藏状态下设置 scrollTop 不生效，会让滚轮停在顶部而不是选中项 */
@@ -2389,12 +2423,24 @@ function closeDatePicker() {
 
 /* 确认：按当前三列算出 endIndex 并刷新报表（刷新前保留滚动位置） */
 function confirmDatePicker() {
+    let idx = null;
     if (state.period === 'month') {
         const last = windowDates().filter(o => o.d.getFullYear() === dateCols.y && o.d.getMonth() + 1 === dateCols.m).pop();
-        if (last) state.endIndex = last.idx;
+        if (last) idx = last.idx;
     } else {
         const t = dateCols.thirds[dateCols.t];
-        if (t) state.endIndex = t.endIndex;
+        if (t) idx = t.endIndex;
+    }
+    if (idx != null) {
+        if (pickTarget === 'start') {
+            state.startIndex = idx;
+            if (state.startIndex > state.endIndex) state.endIndex = state.startIndex;
+        } else {
+            state.endIndex = idx;
+            if (state.endIndex < state.startIndex) state.startIndex = state.endIndex;
+        }
+        if (state.endIndex - state.startIndex + 1 > 12) state.startIndex = state.endIndex - 11;
+        if (state.startIndex < 0) state.startIndex = 0;
     }
     closeDatePicker();
     render();
@@ -2739,7 +2785,7 @@ function saveShareImage() {
     if (!name) return;
     const t = document.getElementById('reportTitle');
     if (t) t.textContent = name;
-    document.title = '手机端 · ' + name;
+    document.title = '机群数据-机群';
 })();
 
 /* 遮罩下沿对齐内容区起点：顶部标题 / 提示条 / 设备与日期 / 周期 Tab 先直接显示出来 */

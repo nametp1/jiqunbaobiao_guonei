@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>手机端 · 添加分组（v2.0）</title>
+<title>添加分组</title>
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     /* 关掉「双击放大」：touch-action: manipulation 只禁双击缩放，
@@ -345,7 +345,7 @@ function showToast(msg) {
 (function initEdit() {
     if (!EDIT_NAME) return;
     const g = loadGroups().filter(x => x && x.name === EDIT_NAME)[0];
-    document.title = '手机端 · 编辑分组（v2.0）';
+    document.title = '添加分组';
     const title = document.querySelector('.page-title');
     if (title) title.textContent = '编辑分组';
     if (!g) { fail('原分组「' + EDIT_NAME + '」已不存在，保存将新建一个同名分组'); return; }

@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>手机端 · 我需要更多报表（v2.0）</title>
+<title>我需要更多报表</title>
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     /* 手机端：去掉双击缩放等待，点按即时响应 */
@@ -171,19 +171,24 @@
  * ====================================================================== */
 /* 内置默认清单：只保留中文（多语言仍支持 —— 后台配置里 name / desc 写成 { 'zh-CN': …, de: … } 即可被 pickLangText 取到）
    候选项不再带预览图字段（本页不做图片预览） */
+/* 2026-10-18：示例数据取 V2/报表意向收集配置.xlsx 的「简体中文」列（标题 + 内容） */
 const MORE_REPORT_OPTIONS = [
-    { name: '超时工作报表',
-      desc: '统计设备超过设定工时阈值的时长、次数与占比，用于识别加班与合规风险。' },
-    { name: '设备异常通知报表',
-      desc: '汇总异常事件的即时通知记录与处理情况：异常类型、发生时间、通知对象与处理状态。' },
-    { name: '电池电量报表',
-      desc: '统计设备 / 机群的电池荷电状态（SOC）与充电情况：期末 SOC、最低 SOC、充电次数与充电时长。' },
-    { name: '碳排放报表',
-      desc: '把燃油 / 电能消耗折算为碳排放量，支持按项目、机型、周期统计，用于 ESG 与绿色施工汇报。' },
-    { name: '驾驶员行为评分报表',
-      desc: '按急加速、急刹车、超速、怠速等事件给出机手的行为评分与排名，便于考核与培训。' },
-    { name: '备件与保养消耗报表',
-      desc: '统计保养、维修产生的备件消耗与费用，按设备、项目与周期汇总。' }
+    { name: '自定义设备分组报表',
+      desc: '可按需要自行选择设备建成分组，生成报表时按该分组内的设备汇总数据。' },
+    { name: '工地项目报表',
+      desc: '可按工地/项目维度汇总该项目下设备的报表数据，例如：A项目中的油耗报表、作业工时报表等。' },
+    { name: '年度统计报表',
+      desc: '按自然年统计单台或多台设备的使用情况，例如：A设备的一年油耗报表、一年作业工时报表等。' },
+    { name: '设备预警报表',
+      desc: '统计单台或多台设备的预警事件明细，例如：A设备近1个月的预警数据，可按日、周、月汇总。' },
+    { name: '地理围栏报警报表',
+      desc: '统计单台或多台设备的地理围栏（电子围栏）报警数据，例如：A设备近1个月的驶入/驶出围栏记录，可按日、周、月汇总。' },
+    { name: '工况报警报表',
+      desc: '统计单台或多台设备的工况报警数据，例如：A设备近1个月的工况报警明细，可按日、周、月汇总。' },
+    { name: '设备维保临期报表',
+      desc: '统计单台或多台设备的维保数据，列出即将到期或已超期的保养项，便于提前安排维护。' },
+    { name: '油位报表',
+      desc: '统计单台或多台设备的油位情况，例如：A设备在统计周期内每日23:59:59的油位数据，可用于日常管理与交接班核对。' }
 ];
 
 const REPORT_OPTIONS_KEY = 'mysany_more_report_options';
@@ -210,24 +215,14 @@ function updateSelCount() {
     submitBtn.textContent = n ? '提交（' + n + '）' : '提交';
 }
 
-/* 当前界面语言（站点写入过 mysany_lang 时按其展示，否则简体中文） */
-function currentUiLang() {
-    try { return localStorage.getItem('mysany_lang') || 'zh-CN'; } catch (e) { return 'zh-CN'; }
-}
-
-/* 多语言取值：当前语言 → 简体中文 → 任一有值的语言（兼容旧的纯字符串写法） */
+/* 国内版只保留中文：候选项的 name / desc 允许写成纯字符串或 { 'zh-CN': ... }，统一取中文 */
 function pickLangText(v) {
     if (v == null) return '';
     if (typeof v === 'string') return v;
-    const order = [currentUiLang(), 'zh-CN'];
-    for (let i = 0; i < order.length; i++) {
-        const s = v[order[i]];
-        if (s && String(s).trim()) return String(s);
-    }
-    const keys = Object.keys(v);
-    for (let j = 0; j < keys.length; j++) {
-        const s = v[keys[j]];
-        if (s && String(s).trim()) return String(s);
+    if (typeof v === 'object') {
+        if (v['zh-CN']) return v['zh-CN'];
+        const k = Object.keys(v).find(function (x) { return v[x]; });
+        return k ? v[k] : '';
     }
     return '';
 }

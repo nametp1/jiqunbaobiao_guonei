@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>单机图表报表模版 · 图表性质（指标卡 / 折线 / 柱状 / 环形）</title>
+<title>单机图表报表模版</title>
 <style>
 /* ============================================================================
    图表性质报表 · 单机 / 机群 共用版式（版式基准 = 同目录 单机报表模版.html）
@@ -19,7 +19,7 @@
       机群折线 / 环形 指标上限 = 1（再选即替换）；机群折线 / 柱状（设备作类目）单次最多前 10 台
       （资产可远多于 10 台，图里只出前 10 台 / 前 10 条，不滚动、不轮播、不按段分页）。
    ③ 同单位约束：折线 / 柱状 / 环形 同屏指标单位必须完全一致；单位不同必须拆图（例：kWh 与 km 不共轴）。
-   ④ 时间口径：日 / 周 / 月 / 班次；日=近 7 节点、周=近 8 周、月=近 12 月、自定义 ≤31 天。
+   ④ 时间口径：日 / 周 / 月；起止区间可选，跨度 ≤3 个月（日报≤92 天 / 周报≤13 周 / 月报≤3 个月）。
    ⑤ 密度：只用静态排版解决 —— 刻度倾斜 40° + 抽稀（约 12 个刻度，末点必标）；不滚动、不轮播、不分段。
    ⑥ 空值：无值不显示（不出图 / 图例隐藏）；明细类输出 -。
    ⑦ 配色：--sany-red #E60000 + 品牌黑 #1a1a1a/#000 + 官方灰阶（#575757 / #A0A0A0 / #CACACA / #DCDCDC）。
@@ -49,6 +49,37 @@ body {
    2026-10-16：国内版改为「网页直接预览」（不再走 PDF 报表），原 A4 报表头 / 水印 / 页脚已删除 */
 .dash { max-width: 1440px; margin: 0 auto; padding: 18px 20px 30px; }
 .dash-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+/* 分享（右上角图标 + 面板，2026-10-18，对齐 App 顶栏分享） */
+.dash-head { position: relative; }
+.dash-head .dh-share { margin-left: auto; position: relative; }
+.share-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; padding: 0; border: none; border-radius: 6px;
+    background: transparent; color: #5a6472; cursor: pointer; transition: background .15s, color .15s;
+}
+.share-btn:hover { background: #f2f3f5; color: var(--sany-red); }
+.share-btn svg { width: 17px; height: 17px; }
+.share-pop {
+    position: absolute; right: 0; top: calc(100% + 6px); z-index: 40; display: none;
+    width: 190px; padding: 6px; background: #fff; border: 1px solid #eef0f3; border-radius: 10px;
+    box-shadow: 0 12px 32px rgba(22,26,46,.16);
+}
+.share-pop.show { display: block; }
+.share-pop button {
+    display: flex; align-items: center; gap: 8px; width: 100%; height: 34px; padding: 0 10px;
+    font-family: inherit; font-size: 12.5px; color: #161a2e; background: none; border: none;
+    border-radius: 6px; cursor: pointer; text-align: left;
+}
+.share-pop button:hover { background: #fafbfc; color: var(--sany-red); }
+.share-pop svg { width: 14px; height: 14px; color: #8b90a0; }
+.share-pop button:hover svg { color: var(--sany-red); }
+.share-tip {
+    position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%);
+    padding: 8px 16px; font-size: 12.5px; color: #fff; background: rgba(22,26,46,.9);
+    border-radius: 8px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 80;
+}
+.share-tip.show { opacity: 1; }
+
 .dash-title { font-size: 19px; font-weight: 700; color: #161a2e; }
 .dash-scope {
     display: inline-block; margin-left: 8px; padding: 1px 8px; vertical-align: 2px;
@@ -67,7 +98,7 @@ body {
 .dh-back:hover { color: var(--sany-red); border-color: #f6a8ae; }
 .dh-pick { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #8b90a0; }
 .dh-pick select {
-    height: 28px; padding: 0 8px; max-width: 220px;
+    height: 28px; padding: 0 8px; max-width: 300px;
     font-family: inherit; font-size: 12.5px; color: #161a2e;
     background: #fff; border: 1px solid #e3e5ea; border-radius: 6px; cursor: pointer;
 }
@@ -107,15 +138,348 @@ html.embed .dash-title { display: none; }   /* 嵌入预览时报表名由宿主
 .seg-btn:hover { color: var(--sany-red); }
 .seg-btn.active { background: #fff; color: var(--sany-red); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 .date-inline { display: inline-flex; align-items: center; gap: 8px; }
-.date-nav {
-    width: 28px; height: 28px; border: 1px solid #E3E5EA; background: #fff; border-radius: 6px;
-    color: #5A6472; font-size: 15px; line-height: 1; cursor: pointer; font-family: inherit;
+/* 起止两个选择器合成一个「区间」控件：一个外框、内部无边框，中间用 ~ 连接（2026-10-18） */
+.date-range {
+    display: inline-flex; align-items: center; gap: 2px; height: 28px; padding: 0 4px 0 8px;
+    background: #fff; border: 1px solid #E3E5EA; border-radius: 6px;
 }
-.date-nav:hover:not(:disabled) { border-color: var(--sany-red); color: var(--sany-red); }
-.date-nav:disabled { opacity: .45; cursor: not-allowed; }
-.date-main { min-width: 220px; text-align: center; font-size: 13px; font-weight: 600; color: var(--ink); }
-/* 工具条行内的元信息靠右，与左侧的切换器拉开 */
-.rpt-toolbar .dash-meta { margin-left: auto; }
+.date-range:hover { border-color: #cfd3da; }
+.date-range:focus-within { border-color: var(--sany-red); }
+.date-range .date-pick {
+    height: 26px; padding: 0 2px; border: none; background: transparent; border-radius: 4px;
+}
+.date-range .date-pick:focus { outline: none; }
+.date-range .pick-dash { color: #98a0ad; font-size: 12px; padding: 0 1px; user-select: none; }
+
+/* 周期选择器（日报=日期 / 周报=周 / 月报=月） */
+.date-pick {
+    height: 28px; padding: 0 6px; font-family: inherit; font-size: 12.5px; color: #161a2e;
+    background: #fff; border: 1px solid #E3E5EA; border-radius: 6px; cursor: pointer;
+}
+.date-pick:focus { outline: none; border-color: var(--sany-red); }
+.date-pick::-webkit-calendar-picker-indicator { cursor: pointer; }
+
+/* 工具条＝左右两组：左＝设备/机群切换，右＝维度 + 周期（细分隔线分开） */
+.rpt-toolbar { justify-content: space-between; gap: 12px; }
+.tb-left, .tb-right { display: flex; align-items: center; gap: 10px; }
+.tb-right { margin-left: auto; padding-left: 12px; border-left: 1px solid #eef0f3; }
+/* 维度 + 周期合成一个控件组：浅底、内边距 3px、统一 30px 高的紧凑感 */
+.period-group { display: inline-flex; align-items: center; gap: 8px; padding: 3px; background: #f6f7f9; border-radius: 8px; }
+.period-group .seg { background: transparent; padding: 0; margin-left: 0; }
+
+/* ---------- 图表悬停气泡（对标 App「机群数据-单机 / 机群」的深色气泡） ---------- */
+.chart-wrap { position: relative; }
+.chart-tip {
+    position: absolute; z-index: 9; display: none; pointer-events: none;
+    transform: translate(-50%, -100%); padding: 6px 10px; border-radius: 7px;
+    background: rgba(22,26,46,.93); color: #fff; font-size: 11px; line-height: 1.55;
+    white-space: nowrap; box-shadow: 0 4px 14px rgba(22,26,46,.24);
+}
+.chart-tip.on { display: block; }
+.chart-tip .tt { display: block; font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+.chart-tip .tr { display: flex; align-items: center; gap: 6px; }
+.chart-tip .tr i { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+.chart-tip .tr .n { opacity: .82; }
+.chart-tip .tr .v { margin-left: auto; padding-left: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* 起止两个选择器合成一个「区间」控件：一个外框、内部无边框，中间用 ~ 连接（2026-10-18） */
+.date-range {
+    display: inline-flex; align-items: center; gap: 2px; height: 28px; padding: 0 4px 0 8px;
+    background: #fff; border: 1px solid #E3E5EA; border-radius: 6px;
+}
+.date-range:hover { border-color: #cfd3da; }
+.date-range:focus-within { border-color: var(--sany-red); }
+.date-range .date-pick {
+    height: 26px; padding: 0 2px; border: none; background: transparent; border-radius: 4px;
+}
+.date-range .date-pick:focus { outline: none; }
+.date-range .pick-dash { color: #98a0ad; font-size: 12px; padding: 0 1px; user-select: none; }
+
+/* 周期选择器（日报=日期 / 周报=周 / 月报=月） */
+.date-pick {
+    height: 28px; padding: 0 6px; font-family: inherit; font-size: 12.5px; color: #161a2e;
+    background: #fff; border: 1px solid #E3E5EA; border-radius: 6px; cursor: pointer;
+}
+.date-pick:focus { outline: none; border-color: var(--sany-red); }
+.date-pick::-webkit-calendar-picker-indicator { cursor: pointer; }
+
+/* 工具条＝左右两组：左＝设备/机群切换，右＝维度 + 周期（细分隔线分开） */
+.rpt-toolbar { justify-content: space-between; gap: 12px; }
+.tb-left, .tb-right { display: flex; align-items: center; gap: 10px; }
+.tb-right { margin-left: auto; padding-left: 12px; border-left: 1px solid #eef0f3; }
+/* 维度 + 周期合成一个控件组：浅底、内边距 3px、统一 30px 高的紧凑感 */
+.period-group { display: inline-flex; align-items: center; gap: 8px; padding: 3px; background: #f6f7f9; border-radius: 8px; }
+.period-group .seg { background: transparent; padding: 0; margin-left: 0; }
+
+/* ---------- 图表悬停气泡（对标 App「机群数据-单机 / 机群」的深色气泡） ---------- */
+.chart-wrap { position: relative; }
+.chart-tip {
+    position: absolute; z-index: 9; display: none; pointer-events: none;
+    transform: translate(-50%, -100%); padding: 6px 10px; border-radius: 7px;
+    background: rgba(22,26,46,.93); color: #fff; font-size: 11px; line-height: 1.55;
+    white-space: nowrap; box-shadow: 0 4px 14px rgba(22,26,46,.24);
+}
+.chart-tip.on { display: block; }
+.chart-tip .tt { display: block; font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+.chart-tip .tr { display: flex; align-items: center; gap: 6px; }
+.chart-tip .tr i { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+.chart-tip .tr .n { opacity: .82; }
+.chart-tip .tr .v { margin-left: auto; padding-left: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+
+/* ---------- 设备分组（2026-10-18）：下拉旁的分组按钮 + 添加 / 编辑分组弹窗 ---------- */
+/* 自定义「机群 / 分组」下拉（替代原生 select） */
+.sel-wrap { position: relative; display: inline-flex; }
+.sel-trigger {
+    display: inline-flex; align-items: center; gap: 8px; height: 28px; max-width: 260px;
+    padding: 0 8px 0 10px; font-family: inherit; font-size: 12.5px; color: #161a2e;
+    background: #fff; border: 1px solid #E3E5EA; border-radius: 6px; cursor: pointer; transition: all .15s;
+}
+.sel-trigger:hover, .sel-trigger.open { border-color: var(--sany-red); }
+.sel-trigger #selLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sel-caret { color: #98a0ad; font-size: 10px; }
+.sel-panel {
+    position: absolute; left: 0; top: calc(100% + 6px); z-index: 40; display: none;
+    width: 280px; max-height: 380px; overflow: auto;
+    background: #fff; border: 1px solid #eef0f3; border-radius: 10px;
+    box-shadow: 0 12px 32px rgba(22,26,46,.16);
+}
+.sel-panel.show { display: block; }
+.sel-sec { padding: 9px 12px 5px; font-size: 11px; color: #98a0ad; }
+.sel-item {
+    display: flex; align-items: center; gap: 6px; padding: 8px 10px 8px 12px;
+    font-size: 12.5px; color: #161a2e; cursor: pointer;
+}
+.sel-item:hover { background: #fafbfc; }
+.sel-item.on { background: #fff7f7; color: var(--sany-red); font-weight: 600; }
+.sel-item .sel-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sel-item .sel-ops { display: none; gap: 2px; }
+.sel-item:hover .sel-ops { display: flex; }
+.sel-op {
+    width: 22px; height: 22px; padding: 0; border: none; background: none; border-radius: 4px;
+    font-size: 12px; line-height: 1; color: #8b90a0; cursor: pointer;
+}
+.sel-op:hover { background: #f1f2f5; color: var(--sany-red); }
+.sel-item .sel-tick { width: 14px; flex: 0 0 14px; color: var(--sany-red); font-size: 12px; }
+.sel-item.on .sel-tick::before { content: '✓'; }
+.sel-empty { padding: 12px; font-size: 12px; color: #98a0ad; }
+.sel-foot { border-top: 1px solid #f2f4f7; padding: 6px; }
+.sel-foot button {
+    width: 100%; height: 30px; border: none; border-radius: 6px; background: #f6f7f9;
+    font-family: inherit; font-size: 12.5px; color: #5a6472; cursor: pointer;
+}
+.sel-foot button:hover { background: #fff1f2; color: var(--sany-red); }
+.cf-mask {
+    position: fixed; inset: 0; z-index: 70; display: none;
+    background: rgba(22,26,46,.42); align-items: center; justify-content: center;
+}
+.cf-mask.show { display: flex; }
+.cf-modal {
+    width: 400px; max-width: calc(100vw - 40px); background: #fff; border-radius: 12px;
+    box-shadow: 0 18px 48px rgba(22,26,46,.24); overflow: hidden;
+}
+.cf-head { padding: 18px 20px 0; font-size: 15px; font-weight: 700; color: #161a2e; }
+.cf-body { padding: 10px 20px 4px; font-size: 13px; line-height: 1.7; color: #5a6472; }
+.cf-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px 18px; }
+.cf-foot button {
+    height: 32px; padding: 0 18px; font-family: inherit; font-size: 13px;
+    border-radius: 6px; cursor: pointer; transition: all .15s;
+}
+.cf-foot .cf-cancel { color: #5a6472; background: #fff; border: 1px solid #E3E5EA; }
+.cf-foot .cf-cancel:hover { border-color: #cfd3da; }
+.cf-foot .cf-ok { color: #fff; background: var(--sany-red); border: 1px solid var(--sany-red); }
+.cf-foot .cf-ok:hover { filter: brightness(1.06); }
+.gp-mask {
+    position: fixed; inset: 0; z-index: 60; display: none;
+    background: rgba(22,26,46,.42); align-items: center; justify-content: center;
+}
+.gp-mask.show { display: flex; }
+.gp-modal {
+    width: 560px; max-width: calc(100vw - 40px); max-height: calc(100vh - 80px);
+    display: flex; flex-direction: column; background: #fff; border-radius: 12px;
+    box-shadow: 0 18px 48px rgba(22,26,46,.24); overflow: hidden;
+}
+.gp-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 12px; }
+.gp-title { font-size: 15px; font-weight: 700; color: #161a2e; }
+.gp-x { border: none; background: none; font-size: 20px; line-height: 1; color: #98a0ad; cursor: pointer; }
+.gp-x:hover { color: #161a2e; }
+.gp-body { padding: 0 20px 4px; overflow: auto; }
+.gp-field { margin-bottom: 14px; }
+.gp-field > label { display: block; font-size: 12.5px; color: #5a6472; margin-bottom: 6px; }
+.gp-field input[type=text] {
+    width: 100%; height: 34px; padding: 0 10px; box-sizing: border-box;
+    font-family: inherit; font-size: 13px; color: #161a2e;
+    border: 1px solid #E3E5EA; border-radius: 6px;
+}
+.gp-field input[type=text]:focus { outline: none; border-color: var(--sany-red); }
+.gp-hint { display: block; margin-top: 5px; font-size: 11.5px; color: #98a0ad; }
+/* 名称行：输入框 + 添加按钮 */
+.gp-namerow { display: flex; align-items: center; gap: 8px; }
+.gp-namerow input[type=text] { flex: 1; min-width: 0; }
+.gp-namerow #gpAdd {
+    flex: 0 0 auto; height: 34px; padding: 0 18px; font-family: inherit; font-size: 13px;
+    color: #fff; background: var(--sany-red); border: 1px solid var(--sany-red); border-radius: 6px; cursor: pointer;
+}
+.gp-namerow #gpAdd:hover { filter: brightness(1.06); }
+.gp-devhead { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.gp-devhead > label { font-size: 12.5px; color: #5a6472; }
+.gp-devhead .gp-count { font-size: 11.5px; color: #98a0ad; }
+.gp-devhead .gp-links { margin-left: auto; display: flex; gap: 10px; }
+.gp-devhead .gp-links a { font-size: 12px; color: #1890ff; cursor: pointer; }
+/* 两栏：左「产品组」→ 右「具体设备」（与 App 添加分组同一套交互） */
+.gp-pane {
+    display: flex; height: 300px; overflow: hidden;
+    border: 1px solid #eef0f3; border-radius: 10px;
+}
+.gp-types { width: 214px; flex: 0 0 214px; background: #f7f8fa; overflow: auto; }
+.gp-type {
+    position: relative; display: flex; align-items: baseline; gap: 4px;
+    padding: 11px 10px 11px 12px; font-size: 12.5px; line-height: 1.5;
+    color: #5a6472; cursor: pointer;
+}
+.gp-type .gp-tname { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.gp-type:hover { color: #161a2e; }
+.gp-type .cnt { flex: 0 0 auto; white-space: nowrap; font-size: 11px; color: #b0b4bd; }
+.gp-type.active { background: #fff; color: var(--sany-red); font-weight: 600; }
+.gp-type.active .cnt { color: #f0a5ab; }
+.gp-type.active::before {
+    content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+    width: 3px; height: 16px; border-radius: 0 3px 3px 0; background: var(--sany-red);
+}
+.gp-devs { flex: 1; min-width: 0; overflow: auto; }
+/* 设备分组快捷条（与手机端「选择设备」弹层一致） */
+.gp-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.gp-chip {
+    display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px;
+    font-family: inherit; font-size: 12.5px; color: #5a6472; background: #fff;
+    border: 1px solid #e3e5ea; border-radius: 14px; cursor: pointer; transition: all .15s;
+}
+.gp-chip:hover { color: var(--sany-red); border-color: #f6a8ae; }
+.gp-chip .gp-chip-pen {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border: none; background: none; padding: 0;
+    color: #b0b4bd; cursor: pointer; border-radius: 4px;
+}
+.gp-chip .gp-chip-pen svg { width: 13px; height: 13px; display: block; }
+.gp-chip .gp-chip-pen:hover { background: #f1f2f5; }
+.gp-chip .gp-chip-pen:hover { color: var(--sany-red); }
+.gp-chip.on { background: #fff7f7; color: var(--sany-red); border-color: #f0a5ab; font-weight: 600; }
+.gp-chip.ghost { color: var(--sany-red); border-style: dashed; border-color: #f0a5ab; background: #fffafa; }
+.gp-bar { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.gp-bar .gp-count { margin-left: auto; font-size: 12px; color: #8b90a0; }
+.gp-bar .gp-links { display: flex; gap: 8px; }
+.gp-bar .gp-links button {
+    height: 28px; padding: 0 14px; font-family: inherit; font-size: 12px; color: #5a6472;
+    background: #f6f7f9; border: 1px solid #eef0f3; border-radius: 14px; cursor: pointer;
+}
+.gp-bar .gp-links button:hover { color: var(--sany-red); border-color: #f6a8ae; background: #fff7f7; }
+.gp-dev {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    border-bottom: 1px solid #f6f7f9; font-size: 12.5px; cursor: pointer;
+}
+.gp-dev:last-child { border-bottom: none; }
+.gp-dev:hover { background: #fafbfc; }
+.gp-dev.on { background: #fff7f7; }
+.gp-dev .gp-main { flex: 1; min-width: 0; }
+.gp-dev .gp-no { display: block; color: #161a2e; font-weight: 600; }
+.gp-dev.on .gp-no { color: var(--sany-red); }
+.gp-dev .gp-nm { display: block; margin-top: 3px; color: #8b90a0; font-size: 11.5px; }
+.gp-dev .gp-check {
+    width: 18px; height: 18px; flex: 0 0 18px; border-radius: 50%;
+    border: 1.5px solid #dfe2e8; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #fff;
+}
+.gp-dev.on .gp-check { background: var(--sany-red); border-color: var(--sany-red); }
+.gp-empty { padding: 30px 14px; text-align: center; font-size: 12.5px; color: #98a0ad; }
+.gp-foot {
+    display: flex; align-items: center; gap: 10px; padding: 12px 20px 16px;
+    border-top: 1px solid #f2f4f7;
+}
+.gp-foot .gp-spacer { margin-left: auto; }
+.gp-foot button {
+    height: 32px; padding: 0 16px; font-family: inherit; font-size: 13px;
+    border-radius: 6px; cursor: pointer; transition: all .15s;
+}
+.gp-foot .gp-del { color: #d4380d; background: #fff; border: 1px solid #ffd8bf; }
+.gp-foot .gp-del:hover { background: #fff2e8; }
+.gp-foot .gp-cancel { color: #5a6472; background: #fff; border: 1px solid #E3E5EA; }
+.gp-foot .gp-cancel:hover { border-color: #cfd3da; }
+.gp-foot .gp-save { color: #fff; background: var(--sany-red); border: 1px solid var(--sany-red); }
+.gp-foot .gp-save:hover { filter: brightness(1.06); }
+
+/* 下载 XLSX 按钮（2026-10-18） */
+.tb-dl {
+    display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 14px;
+    font-family: inherit; font-size: 12.5px; font-weight: 600; color: #fff;
+    background: var(--sany-red); border: 1px solid var(--sany-red); border-radius: 6px; cursor: pointer;
+    transition: filter .15s;
+}
+.tb-dl:hover { filter: brightness(1.06); }
+.tb-dl svg { width: 14px; height: 14px; }
+
+/* 首次访问加载态（骨架屏）/ 加载失败态（2026-10-19） */
+.page-load {
+    position: fixed; z-index: 200; display: none; border-radius: 12px; overflow: hidden;
+    background: #f6f7f9;
+}
+.page-load.show { display: block; }
+/* 骨架块 */
+.sk-wrap { width: 100%; height: 100%; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; }
+.sk-metrics { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; flex: 0 0 96px; }
+.sk-metrics span, .sk-block, .sk-pair .sk-block {
+    display: block; border-radius: 10px; background: #edeff3; position: relative; overflow: hidden;
+}
+.sk-block { flex: 0 0 90px; }
+.sk-block.sk-tall { flex: 0 0 210px; }
+.sk-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; flex: 0 0 150px; }
+.sk-pair .sk-block { flex: none; height: 100%; }
+.sk-metrics span::after, .sk-block::after, .sk-pair .sk-block::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.75) 50%, rgba(255,255,255,0) 100%);
+    transform: translateX(-100%); animation: skshine 1.25s ease-in-out infinite;
+}
+@keyframes skshine { to { transform: translateX(100%); } }
+/* 失败态 */
+.pl-card { display: none; }
+.page-load.fail { background: #f6f7f9; }
+.page-load.fail .sk-wrap { display: none; }
+.page-load.fail .pl-card {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%); display: block;
+    width: 320px; padding: 28px 24px; text-align: center; background: #fff;
+    border-radius: 12px; box-shadow: 0 12px 40px rgba(22,26,46,.12);
+}
+.pl-fail-icon {
+    width: 40px; height: 40px; margin: 0 auto 12px; border-radius: 50%;
+    background: #fff1f0; color: #d4380d; font-size: 22px; font-weight: 700; line-height: 40px;
+}
+.pl-title { font-size: 14px; font-weight: 600; color: #161a2e; }
+.pl-desc { margin-top: 6px; font-size: 12px; color: #8b90a0; line-height: 1.6; }
+.pl-retry {
+    margin-top: 16px; height: 32px; padding: 0 18px; font-family: inherit; font-size: 13px;
+    color: #fff; background: var(--sany-red); border: 1px solid var(--sany-red); border-radius: 6px; cursor: pointer;
+}
+.pl-retry:hover { filter: brightness(1.06); }
+/* 失败态 */
+.page-load.fail .pl-spinner { display: none; }
+.page-load.fail .pl-fail-icon { display: block; }
+.page-load.fail .pl-retry { display: inline-block; }
+.page-load.fail .pl-desc { color: #8b90a0; }
+
+/* 卡片视图切换：图表 / 明细（2026-10-19，与 App 一致） */
+.view-switch { display: inline-flex; margin-left: auto; background: #f4f5f7; border-radius: 6px; padding: 2px; }
+.view-switch .vs {
+    height: 22px; padding: 0 10px; font-family: inherit; font-size: 12px; color: #5a6472;
+    background: none; border: none; border-radius: 4px; cursor: pointer;
+}
+.view-switch .vs.on { background: #fff; color: var(--sany-red); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.chart-detail { display: none; }
+.section.detail-mode .chart-wrap { display: none; }
+.section.detail-mode .chart-detail { display: block; }
+.chart-detail table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.chart-detail th, .chart-detail td { padding: 7px 10px; border-bottom: 1px solid #f0f1f4; text-align: left; }
+.chart-detail th { font-weight: 600; color: #5a6472; background: #fafbfc; }
+.chart-detail td.num, .chart-detail th.num { text-align: center; font-variant-numeric: tabular-nums; }
+.chart-detail tr:last-child td { border-bottom: none; }
 
 /* ---------- 指标卡 ---------- */
 .metrics {
@@ -383,10 +747,6 @@ html.embed .dash { max-width: none; padding: 0; }
             <span class="logo">MySANY</span>
         </div>
         <div class="navbar-right">
-            <div class="navbar-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                简体中文
-            </div>
             <div class="navbar-item" title="个人中心">
                 <span>Schuck</span>
                 <div class="navbar-avatar"></div>
@@ -458,17 +818,19 @@ html.embed .dash { max-width: none; padding: 0; }
             <a class="dh-back" href="报表模版.html" title="返回报表列表" aria-label="返回报表列表">‹</a>
             <span class="dash-title" id="repName">设备综合报表</span><span class="dash-scope">单机</span>
         </div>
-        <div class="dh-right">
-            <div class="seg" id="dimTabs">
-            <button type="button" class="seg-btn active" data-dim="day">日报</button>
-            <button type="button" class="seg-btn" data-dim="week">周报</button>
-            <button type="button" class="seg-btn" data-dim="month">月报</button>
-        </div>
-        <div class="date-inline">
-            <button type="button" class="date-nav" id="navPrev" title="查看更早的周期">‹</button>
-            <span class="date-main" id="dateMain">{{统计周期}}</span>
-            <button type="button" class="date-nav" id="navNext" title="回到更新的周期" disabled>›</button>
-        </div>
+        <div class="dh-share">
+            <button type="button" class="share-btn" id="shareBtn" title="分享" aria-label="分享">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                    <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>
+                </svg>
+            </button>
+            <div class="share-pop" id="sharePop">
+                <button type="button" data-share="copy">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+                    分享给好友
+                </button>
+            </div>
         </div>
     </div>
 
@@ -476,10 +838,35 @@ html.embed .dash { max-width: none; padding: 0; }
     <!-- 【筛选工具条】日报 / 周报 / 月报 + 时间窗口前后回看（对齐 App「机群数据-单机」的交互）
          交互只作用于屏幕端：打印 / 转 PDF 时自动隐藏，报表按当前所选周期输出 -->
     <div class="rpt-toolbar" id="rptToolbar">
-        <label class="dh-pick">设备切换
-                <select id="devPick" title="切换设备后整页数据按其重算"></select>
+        <div class="tb-left">
+            <label class="dh-pick">
+                <button type="button" class="sel-trigger" id="devTrigger" title="选择模型组和设备">
+                    <span id="devLabel">—</span><i class="sel-caret">▾</i>
+                </button>
             </label>
-            <div class="dash-meta"><span id="metaSn" data-field="deviceSn">{{资产编号}}</span> · <span id="metaModel" data-field="deviceModel">{{设备机型}}</span> · <span data-field="period">{{统计周期}}</span></div>
+        </div>
+        <div class="tb-right">
+            <div class="period-group">
+                <div class="seg" id="dimTabs">
+                    <button type="button" class="seg-btn active" data-dim="day">日报</button>
+                    <button type="button" class="seg-btn" data-dim="week">周报</button>
+                    <button type="button" class="seg-btn" data-dim="month">月报</button>
+                </div>
+                <div class="date-inline">
+                    <span class="date-range">
+                        <input type="date" class="date-pick" id="pickStart" title="开始周期">
+                        <span class="pick-dash">~</span>
+                        <input type="date" class="date-pick" id="pickEnd" title="结束周期（与开始最多相差 3 个月）">
+                    </span>
+                </div>
+            </div>
+            <button type="button" class="tb-dl" id="btnXlsx" title="把下方明细导出为 Excel（.xlsx）">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M4 21h16"/>
+                </svg>
+                下载 XLSX
+            </button>
+        </div>
     </div>
 
     <div class="main">
@@ -488,41 +875,45 @@ html.embed .dash { max-width: none; padding: 0; }
             <div class="section-head"><span class="comp-title" id="tCards">关键指标 · 本期（单台设备）</span><span class="comp-tag">指标卡</span></div>
             <span class="row-note">规则：一张卡只放 1 个指标，单行 ≤4 张（超过 4 张拆第二行）；卡片顺序按照后台配置顺序固定。数值＝当前所选周期窗口内的合计。</span>
             <div class="metrics">
-                <div class="metric"><div class="label">工时</div><div class="number" id="mHours">—</div><div class="unit">h</div></div>
-                <div class="metric"><div class="label">怠速工时</div><div class="number" id="mIdle">—</div><div class="unit">h</div></div>
-                <div class="metric"><div class="label">行驶时长</div><div class="number" id="mDrive">—</div><div class="unit">h</div></div>
-                <div class="metric"><div class="label">里程</div><div class="number" id="mMileage">—</div><div class="unit">km</div></div>
+                <div class="metric" title="工时 = 作业 + 行驶 + 怠速 累计（所选周期窗口内）"><div class="label">工时</div><div class="number" id="mHours">—</div><div class="unit">h</div></div>
+                <div class="metric" title="怠速工时 = 怠速状态时长累计"><div class="label">怠速工时</div><div class="number" id="mIdle">—</div><div class="unit">h</div></div>
+                <div class="metric" title="行驶时长 = 行驶状态时长累计"><div class="label">行驶时长</div><div class="number" id="mDrive">—</div><div class="unit">h</div></div>
+                <div class="metric" title="里程 = 统计窗口内累计行驶里程"><div class="label">里程</div><div class="number" id="mMileage">—</div><div class="unit">km</div></div>
             </div>
         </div>
         <!-- ===== 组件 2：折线图（单机口径 = 多指标 ≤5、必须同单位；此处 3 条线均为 h） ===== -->
         <div class="section span-4">
-            <div class="section-head"><span class="comp-title" id="tLine">工时结构趋势（近 7 天 · 日粒度）</span><span class="comp-tag">折线图</span></div>
+            <div class="section-head"><span class="comp-title" id="tLine">工时结构趋势（近 7 天 · 日粒度）</span><span class="comp-tag">折线图</span><span class="view-switch" data-kind="line"><button type="button" class="vs on" data-v="chart">图表</button><button type="button" class="vs" data-v="detail">明细</button></span></div>
             <div class="rule-note">规则：单机折线可绑 ≤5 个指标。刻度：节点 &gt; 7 时倾斜 40°；溢出 12 个时抽稀到 12 个。</div>
                         <div class="chart-wrap" id="chart-line"></div>
+            <div class="chart-detail" data-detail="line"></div>
         </div>
         <!-- ===== 组件 3 + 4：柱状图（垂直）/ 环形图（各占 50% 半宽并排） ===== -->
         <div class="section span-2">
-            <div class="section-head"><span class="comp-title" id="tBarV">月度工时构成（近 12 个月 · 3 指标）</span><span class="comp-tag">柱状图</span></div>
+            <div class="section-head"><span class="comp-title" id="tBarV">月度工时构成（近 12 个月 · 3 指标）</span><span class="comp-tag">柱状图</span><span class="view-switch" data-kind="barv"><button type="button" class="vs on" data-v="chart">图表</button><button type="button" class="vs" data-v="detail">明细</button></span></div>
             <div class="rule-note">规则：柱状图可绑 ≤5 个指标；多指标在同一时间块内并排显示、一个指标一个柱色（与折线图同一套颜色顺序）；节点 ≤7 个时柱顶标数值，多指标并排时只标第 1 个指标。日按日，周按日，月按周统计聚合。</div>
                         <div class="chart-wrap" id="chart-bar-v"></div>
+            <div class="chart-detail" data-detail="barv"></div>
         </div>
         <div class="section span-2">
-            <div class="section-head"><span class="comp-title">工时构成（作业 / 行驶 / 怠速）</span><span class="comp-tag">环形图</span></div>
+            <div class="section-head"><span class="comp-title">工时构成（作业 / 行驶 / 怠速）</span><span class="comp-tag">环形图</span><span class="view-switch" data-kind="ring"><button type="button" class="vs on" data-v="chart">图表</button><button type="button" class="vs" data-v="detail">明细</button></span></div>
             <div class="rule-note">规则：环形图看<b>构成比例</b>，单机可 ≤5 个指标；中心显示合计。</div>
                         <div class="chart-wrap" id="chart-ring"></div>
+            <div class="chart-detail" data-detail="ring"></div>
         </div>
 
         <!-- ===== 组件 5：柱状图·水平（单机口径 = 同一组件的另一种排布；X 轴＝数值、Y 轴＝时间周期） ===== -->
-        <div class="section span-2">
-            <div class="section-head"><span class="comp-title" id="tBarH">工时对比（近 7 天 · 水平排布）</span><span class="comp-tag">柱状图</span></div>
+        <div class="section span-4">
+            <div class="section-head"><span class="comp-title" id="tBarH">工时对比（近 7 天 · 水平排布）</span><span class="comp-tag">柱状图</span><span class="view-switch" data-kind="barh"><button type="button" class="vs on" data-v="chart">图表</button><button type="button" class="vs" data-v="detail">明细</button></span></div>
             <div class="rule-note">规则：X 轴＝指标数值、Y 轴＝时间周期，类目按时间排列（近 7 个周期）；首个指标末端标最大数值，多指标并排时只标第 1 个指标。</div>
             <div class="chart-wrap" id="chart-bar-h"></div>
+            <div class="chart-detail" data-detail="barh"></div>
         </div>
 
         <!-- ===== 组件 6：数据明细表（单机口径 = 行＝时间序列、列＝指标） ===== -->
-        <div class="section span-2">
+        <div class="section span-4">
             <div class="section-head"><span class="comp-title" id="tTable">周期明细（近 7 天 · 日粒度）</span><span class="comp-tag">数据明细</span></div>
-            <div class="rule-note">规则：行＝时间序列（日 / 周 / 月 / 班次），列＝指标名称（一列一个指标、各列单位可不同，不受「同单位」约束）；某时间切片缺数据时单元格输出「-」，不补 0。</div>
+            <div class="rule-note">规则：行＝时间序列（日 / 周 / 月），列＝指标名称（一列一个指标、各列单位可不同，不受「同单位」约束）；某时间切片缺数据时单元格输出「-」，不补 0。</div>
             <table>
                 <thead><tr><th style="width:16%">周期</th><th class="num">工时（h）</th><th class="num">行驶时长（h）</th><th class="num">怠速工时（h）</th><th class="num">里程（km）</th></tr></thead>
                 <tbody id="detailBody">
@@ -541,6 +932,52 @@ html.embed .dash { max-width: none; padding: 0; }
 </div>
         </main>
     </div>
+</div>
+
+<!-- ==================== 选择资产（模型组 → 设备，单机口径单选） ==================== -->
+<div class="gp-mask" id="mdMask">
+    <div class="gp-modal">
+        <div class="gp-head">
+            <span class="gp-title">选择资产</span>
+            <button type="button" class="gp-x" id="mdClose" title="关闭">×</button>
+        </div>
+        <div class="gp-body">
+            <div class="gp-field">
+                <div class="gp-pane">
+                    <div class="gp-types" id="mdTypes"></div>
+                    <div class="gp-devs" id="mdDevs"></div>
+                </div>
+            </div>
+        </div>
+        <div class="gp-foot">
+            <span class="gp-spacer"></span>
+            <button type="button" class="gp-cancel" id="mdReset">重置</button>
+            <button type="button" class="gp-save" id="mdOk">确定</button>
+        </div>
+    </div>
+</div>
+
+<!-- 首次访问加载态（骨架屏，贴合卡片布局）/ 加载失败态（2026-10-19） -->
+<div class="page-load show" id="pageLoad">
+    <div class="sk-wrap" id="plSkeleton">
+        <div class="sk-metrics">
+            <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="sk-block sk-tall"></div>
+        <div class="sk-pair">
+            <div class="sk-block"></div>
+            <div class="sk-block"></div>
+        </div>
+        <div class="sk-block sk-tall"></div>
+        <div class="sk-block"></div>
+    </div>
+    <div class="pl-card">
+        <div class="pl-fail-icon" aria-hidden="true">!</div>
+        <div class="pl-title" id="plTitle">报表加载失败</div>
+        <div class="pl-desc" id="plDesc">网络异常或服务暂时不可用，请稍后重试。</div>
+        <button type="button" class="pl-retry" id="plRetry">重新加载</button>
+    </div>
+</div>
 </div>
 
 <script>
@@ -569,6 +1006,32 @@ html.embed .dash { max-width: none; padding: 0; }
         var w = el ? Math.round(el.clientWidth) : 0;
         return w >= 260 ? w : fallback;
     }
+    /* ---------- 悬停气泡：SVG 里放透明热区承载 data-tip，鼠标移上去跟随显示 ---------- */
+    function tipAttr(title, rows) {
+        return " data-tip='" + JSON.stringify({ t: title, rows: rows }) + "'";
+    }
+    function showTip(e) {
+        var hit = e.target && e.target.closest ? e.target.closest('[data-tip]') : null;
+        var wrap = hit && hit.closest ? hit.closest('.chart-wrap') : null;
+        if (!wrap) { hideTip(); return; }
+        var d; try { d = JSON.parse(hit.getAttribute('data-tip')); } catch (err) { return hideTip(); }
+        var box = wrap.querySelector('.chart-tip');
+        if (!box) { box = document.createElement('div'); box.className = 'chart-tip'; wrap.appendChild(box); }
+        hideTip();                                   /* 同一时刻只留一个气泡，避免跨卡片残留 */
+        box.innerHTML = '<span class="tt">' + d.t + '</span>' + (d.rows || []).map(function (r) {
+            return '<div class="tr"><i style="background:' + r[0] + '"></i><span class="n">' + r[1] + '</span><span class="v">' + r[2] + '</span></div>';
+        }).join('');
+        var wr = wrap.getBoundingClientRect();
+        box.style.left = Math.max(70, Math.min(wr.width - 70, e.clientX - wr.left)) + 'px';
+        box.style.top = Math.max(36, e.clientY - wr.top - 12) + 'px';
+        box.classList.add('on');
+    }
+    function hideTip() {
+        Array.prototype.forEach.call(document.querySelectorAll('.chart-tip.on'), function (b) { b.classList.remove('on'); });
+    }
+    document.addEventListener('mousemove', showTip);
+    document.addEventListener('mouseleave', hideTip, true);
+
     function fmt(n, d) { return Number(n).toLocaleString('en-US', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); }
     /* Y 轴网格：4 段，刻度值自适应（lo/hi 由数据决定，不写死） */
     function gridY(W, H, padL, padR, padT, padB, lo, hi, unit, dec) {
@@ -621,12 +1084,97 @@ html.embed .dash { max-width: none; padding: 0; }
        ====================================================================== */
     var BUCKETS = 18, WIN = 7, WIN_BAR = 12, MAX_BACK = BUCKETS - WIN_BAR;
 
+    /* 时间窗口上限（2026-10-18）：所有维度都不超过「近 3 个月」——
+       日报 / 周报：折线·明细 7 个周期、柱状 12 个（12 周 ≈ 3 个月）；
+       月报：统一压到 3 个月（折线 3 个节点、柱状 3 根），因此 ◀ 最多回看到 3 个月前 */
+    function applyWindowLimit() {
+        var isMonth = (STATE.dim === 'month');
+        WIN = isMonth ? 3 : 7;
+        WIN_BAR = isMonth ? 3 : 12;
+        MAX_BACK = BUCKETS - Math.max(WIN, WIN_BAR);
+        if (STATE.back > maxBackByCap()) STATE.back = maxBackByCap();
+    }
+
+    /* ======================================================================
+       起止区间选择器（2026-10-18）：日报=日期 / 周报=周 / 月报=月，两个选择器定区间，
+       跨度硬限制 3 个月（超限自动把「结束」收窄）。图表按区间内的周期数出图。
+       演示数据共 18 个周期（末日 2026-09-21），下标越界会被夹住。
+       ====================================================================== */
+    var MAX_MONTH_SPAN = 3;
+    var LAST_DAY = new Date(2026, 8, 21);                /* 演示数据最新周期末日 */
+    var CAP = { day: 92, week: 13, month: 3 };           /* 3 个月 ≈ 92 天 / 13 周 / 3 个月 */
+
+    function pad2(n) { return (n < 10 ? '0' : '') + n; }
+    function dayDiff(a, b) { return Math.round((b - a) / 86400000); }
+    function dateKey(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+    function monthKey(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1); }
+    function addDays(d, n) { var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() + n); return x; }
+    function addMonths(d, n) { return new Date(d.getFullYear(), d.getMonth() + n, 1); }
+    function isoWeekOf(d) {
+        var t = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        t.setDate(t.getDate() + 4 - (t.getDay() || 7));
+        var y0 = new Date(t.getFullYear(), 0, 1);
+        return { y: t.getFullYear(), w: Math.ceil(((t - y0) / 86400000 + 1) / 7) };
+    }
+    function isoWeekKey(d) { var k = isoWeekOf(d); return k.y + '-W' + pad2(k.w); }
+    function isoWeekMonday(key) {
+        var p = key.split('-W');
+        var d = new Date(+p[0], 0, 4);
+        d.setDate(d.getDate() - (d.getDay() || 7) + 1 + (+p[1] - 1) * 7);
+        return d;
+    }
+    function monthDiff(a, b) { return (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth()); }
+
+    /* 周期值 → 相对「最新周期」的偏移（0 = 最新） */
+    function offsetOf(dim, v) {
+        if (!v) return 0;
+        if (dim === 'day') return dayDiff(new Date(v + 'T00:00:00'), LAST_DAY);
+        if (dim === 'week') return Math.round(dayDiff(isoWeekMonday(v), LAST_DAY) / 7);
+        var p = v.split('-');
+        return monthDiff(new Date(+p[0], +p[1] - 1, 1), new Date(LAST_DAY.getFullYear(), LAST_DAY.getMonth(), 1));
+    }
+    /* 偏移 → 周期值（给选择器回填） */
+    function valueOf(dim, off) {
+        if (dim === 'day') return dateKey(addDays(LAST_DAY, -off));
+        if (dim === 'week') return isoWeekKey(addDays(isoWeekMondayOf(LAST_DAY), -off * 7));
+        return monthKey(addMonths(LAST_DAY, -off));
+    }
+    function isoWeekMondayOf(d) { return addDays(d, -(((d.getDay() || 7) - 1))); }
+
+    /* 偏移 → 数据下标（0 最旧，BUCKETS-1 最新） */
+    function idxOf(off) { return Math.max(0, Math.min(BUCKETS - 1, (BUCKETS - 1) - off)); }
+
+    function syncPickers() {
+        var s = document.getElementById('pickStart'), e = document.getElementById('pickEnd');
+        if (!s || !e) return;
+        var type = STATE.dim === 'week' ? 'week' : (STATE.dim === 'month' ? 'month' : 'date');
+        s.type = type; e.type = type;
+        s.value = valueOf(STATE.dim, (BUCKETS - 1) - STATE.i0);
+        e.value = valueOf(STATE.dim, (BUCKETS - 1) - STATE.i1);
+        var cap = CAP[STATE.dim];
+        s.title = '开始周期（与结束最多相差 ' + MAX_MONTH_SPAN + ' 个月，约 ' + cap + ' 个周期）';
+        e.title = s.title;
+    }
+    function onPickRange() {
+        var s = document.getElementById('pickStart'), e = document.getElementById('pickEnd');
+        if (!s || !e || !s.value || !e.value) { syncPickers(); return; }
+        var o0 = offsetOf(STATE.dim, s.value), o1 = offsetOf(STATE.dim, e.value);
+        if (o1 > o0) o1 = o0;                                     /* 结束早于开始 → 对齐到开始（offset 越小越新） */
+        var cap = CAP[STATE.dim];
+        if (o0 - o1 + 1 > cap) o1 = o0 - cap + 1;                 /* 超 3 个月 → 收窄结束 */
+        STATE.i0 = idxOf(o0);
+        STATE.i1 = Math.max(STATE.i0, idxOf(o1));
+        renderAll();
+    }
+
+
+
     var DIM_META = {
         day:   { tab: '日报', unitTxt: '日', suffix: '日粒度', factor: 1 },
         week:  { tab: '周报', unitTxt: '周', suffix: '周粒度', factor: 7 },
         month: { tab: '月报', unitTxt: '个月', suffix: '月粒度', factor: 30 }
     };
-    var STATE = { dim: 'day', back: 0, dev: 0 };
+    var STATE = { dim: 'day', i0: 11, i1: 17, dev: 0 };   /* i0..i1 = 当前区间下标（默认近 7 日） */
 
     /* 可选设备清单（设备切换）：每台设备一套日均基准值（工时 = 作业 + 行驶 + 怠速；里程 / 行驶时长 ≈ 51 km/h）。
        真实接口接入后，把这份清单换成后端返回的「可选设备列表」即可，其余渲染逻辑不用动 */
@@ -674,12 +1222,12 @@ html.embed .dash { max-width: none; padding: 0; }
     function win(key, count) {
         var s = seriesOf(STATE.dim);
         var arr = (key === 'label') ? s.labels : s[key];
-        return arr.slice(BUCKETS - STATE.back - count, BUCKETS - STATE.back);
+        return arr.slice(STATE.i0, STATE.i1 + 1);
     }
     function sum(arr) { return arr.reduce(function (x, y) { return x + y; }, 0); }
     function periodText() {
         var L = win('label', WIN);
-        return L[0] + ' – ' + L[WIN - 1] + '（近 7 ' + DIM_META[STATE.dim].unitTxt + '）';
+        return L[0] + ' – ' + L[L.length - 1] + '（共 ' + L.length + ' ' + DIM_META[STATE.dim].unitTxt + '）';
     }
 
     /* ---------- 指标卡：窗口内合计（全部由序列算出，不写死） ---------- */
@@ -715,6 +1263,13 @@ html.embed .dash { max-width: none; padding: 0; }
             s += '<text x="' + (lx + 22) + '" y="19.5" font-size="14" fill="' + TXT + '">' + d.n + '</text>';
         });
         s += labelsX(label, X, H);
+        /* 悬停热区：每格一条竖带，气泡列出该格三个指标的值 */
+        label.forEach(function (t, i) {
+            var half = (W - padL - padR) / Math.max(1, label.length - 1) / 2;
+            var x1 = Math.max(padL, X(i) - half), x2 = Math.min(W - padR, X(i) + half);
+            s += '<rect x="' + x1.toFixed(1) + '" y="' + padT + '" width="' + (x2 - x1).toFixed(1) + '" height="' + (H - padT - padB) + '" fill="transparent"' +
+                 tipAttr(t, defs.map(function (d) { return [d.c, d.n, d.v[i].toFixed(1)]; })) + '/>';
+        });
         put('chart-line', svg(W, H, s));
     }
 
@@ -743,6 +1298,9 @@ html.embed .dash { max-width: none; padding: 0; }
                 var x = x0 + k * (bw + gap), y = Y(d.v[i]);
                 s += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, H - padB - y).toFixed(1) + '" fill="' + d.c + '" rx="1"/>';
             });
+            /* 悬停热区：整组一条竖带，气泡列出该周期各指标数值 */
+            s += '<rect x="' + (x0 - 2).toFixed(1) + '" y="' + padT + '" width="' + (groupW + 4).toFixed(1) + '" height="' + (H - padT - padB) + '" fill="transparent"' +
+                 tipAttr(t, defs.map(function (d) { return [d.c, d.n, d.v[i].toFixed(1)]; })) + '/>';
             /* 节点 ≤ 7 才在柱顶标第 1 个指标的数值 */
             if (label.length <= 7) {
                 s += '<text x="' + (x0 + bw / 2).toFixed(1) + '" y="' + (Y(defs[0].v[i]) - 6).toFixed(1) + '" text-anchor="middle" font-size="12" fill="' + G2 + '">' + defs[0].v[i] + '</text>';
@@ -764,7 +1322,8 @@ html.embed .dash { max-width: none; padding: 0; }
     function renderBarH() {
         var label = win('label', WIN), hours = win('hours', WIN), drive = win('drive', WIN);
         var rows = [];
-        for (var i = WIN - 1; i >= 0; i--) {                      /* 最新的排在最上 */
+        var nRow = label.length;
+        for (var i = nRow - 1; i >= 0; i--) {                     /* 最新的排在最上 */
             rows.push({ t: label[i], v: [hours[i], drive[i]] });
         }
         var names = [{ n: '工时 (h)', c: RED }, { n: '行驶时长 (h)', c: G2 }];
@@ -785,6 +1344,9 @@ html.embed .dash { max-width: none; padding: 0; }
                 s += '<rect x="' + padL + '" y="' + y.toFixed(1) + '" width="' + Math.max(1, X(v) - padL).toFixed(1) + '" height="' + bh + '" fill="' + names[k].c + '" rx="1"/>';
             });
             s += '<text x="' + (padL - 10) + '" y="' + (top + groupH / 2 + 4.5).toFixed(1) + '" text-anchor="end" font-size="13" fill="' + TXT + '">' + r.t + '</text>';
+            /* 悬停热区：整行一条横带 */
+            s += '<rect x="' + padL + '" y="' + (top - 2).toFixed(1) + '" width="' + (W - padL - padR).toFixed(1) + '" height="' + (groupH + 4).toFixed(1) + '" fill="transparent"' +
+                 tipAttr(r.t, names.map(function (nm, k) { return [nm.c, nm.n, r.v[k].toFixed(1)]; })) + '/>';
             if (i === maxIdx) {
                 s += '<text x="' + (X(r.v[0]) + 6).toFixed(1) + '" y="' + (top + bh - 1).toFixed(1) + '" font-size="12" fill="' + G2 + '">' + r.v[0].toFixed(1) + '</text>';
             }
@@ -810,7 +1372,8 @@ html.embed .dash { max-width: none; padding: 0; }
         var s = '', a = 0;
         items.forEach(function (it) {
             var to = a + it.v / total * 360, p0 = polar(a), p1 = polar(to), large = (to - a) > 180 ? 1 : 0;
-            s += '<path d="M ' + cx + ' ' + cy + ' L ' + p0[0].toFixed(1) + ' ' + p0[1].toFixed(1) + ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + p1[0].toFixed(1) + ' ' + p1[1].toFixed(1) + ' Z" fill="' + it.c + '"/>';
+            s += '<path d="M ' + cx + ' ' + cy + ' L ' + p0[0].toFixed(1) + ' ' + p0[1].toFixed(1) + ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + p1[0].toFixed(1) + ' ' + p1[1].toFixed(1) + ' Z" fill="' + it.c + '"' +
+                 tipAttr(it.n, [[it.c, '数值', it.v.toFixed(1)], ['rgba(255,255,255,.4)', '占比', (it.v / total * 100).toFixed(1) + '%']]) + '/>';
             a = to;
         });
         s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * .62).toFixed(1) + '" fill="#fff"/>';
@@ -830,7 +1393,8 @@ html.embed .dash { max-width: none; padding: 0; }
     function renderTable() {
         var label = win('label', WIN), h = win('hours', WIN), dr = win('drive', WIN), idl = win('idle', WIN), mi = win('mileage', WIN);
         var html = '';
-        for (var i = WIN - 1; i >= 0; i--) {
+        var nRow = label.length;
+        for (var i = nRow - 1; i >= 0; i--) {
             html += '<tr><td>' + label[i] + '</td><td class="num">' + fmt(h[i], 1) + '</td><td class="num">' + fmt(dr[i], 1) + '</td><td class="num">' + fmt(idl[i], 1) + '</td><td class="num">' + fmt(mi[i], 1) + '</td></tr>';
         }
         html += '<tr class="sum-row"><td><b>合计</b></td><td class="num"><b>' + fmt(sum(h), 1) + '</b></td><td class="num"><b>' + fmt(sum(dr), 1) + '</b></td><td class="num"><b>' + fmt(sum(idl), 1) + '</b></td><td class="num"><b>' + fmt(sum(mi), 1) + '</b></td></tr>';
@@ -842,11 +1406,83 @@ html.embed .dash { max-width: none; padding: 0; }
         Array.prototype.slice.call(document.querySelectorAll('#dimTabs .seg-btn')).forEach(function (b) {
             b.classList.toggle('active', b.dataset.dim === STATE.dim);
         });
-        document.getElementById('dateMain').textContent = periodText();
-        document.getElementById('navPrev').disabled = STATE.back >= MAX_BACK;   /* 再往前没有 12 个周期可画 */
-        document.getElementById('navNext').disabled = STATE.back <= 0;
+        var dm = document.getElementById('dateMain');       /* 起止已由两个选择器显示，文案节点已移除 */
+        if (dm) dm.textContent = periodText();
     }
+
+    /* ==================== 卡片视图切换：图表 / 明细（2026-10-19） ====================
+       · 只有图表类卡片带切换；切换不重新拉数，明细表用当前窗口数据即时计算
+       · 明细表结构与 App 明细一致：首列类目 + 各指标列（数值居中） */
+    function cardDetailHtml(head, rows) {
+        var th = head.map(function (h, i) { return '<th class="' + (i ? 'num' : '') + '">' + h + '</th>'; }).join('');
+        var tr = rows.map(function (r) {
+            return '<tr>' + r.map(function (c, i) { return '<td class="' + (i ? 'num' : '') + '">' + c + '</td>'; }).join('') + '</tr>';
+        }).join('');
+        return '<table><thead><tr>' + th + '</tr></thead><tbody>' + tr + '</tbody></table>';
+    }
+    function setCardView(kind, view) {
+        var box = document.querySelector('.chart-detail[data-detail="' + kind + '"]');
+        if (!box) return;
+        var sec = box.closest('.section');
+        sec.classList.toggle('detail-mode', view === 'detail');
+        sec.querySelectorAll('.view-switch .vs').forEach(function (b) {
+            b.classList.toggle('on', b.getAttribute('data-v') === view);
+        });
+        if (view === 'detail') {
+            var d = cardDetailData(kind);
+            if (d) box.innerHTML = cardDetailHtml(d.head, d.rows);
+        }
+    }
+    document.addEventListener('click', function (e) {
+        var b = e.target.closest('.view-switch .vs');
+        if (!b) return;
+        var sw = b.closest('.view-switch');
+        setCardView(sw.getAttribute('data-kind'), b.getAttribute('data-v'));
+    });
+
+    /* 各卡片的明细数据（单机口径） */
+    function cardDetailData(kind) {
+        var N = (kind === 'barv') ? WIN_BAR : WIN;
+        var L = win('label', N);
+        if (kind === 'line' || kind === 'barv') {
+            var h = win('hours', N), d = win('drive', N), i2 = win('idle', N);
+            return {
+                head: ['周期', '工时 (h)', '行驶时长 (h)', '怠速工时 (h)'],
+                rows: L.map(function (t, i) {
+                    return [t, h[i].toFixed(1), d[i].toFixed(1), i2[i].toFixed(1)];
+                })
+            };
+        }
+        if (kind === 'barh') {
+            var h2 = win('hours', N), d2 = win('drive', N);
+            return {
+                head: ['周期', '工时 (h)', '行驶时长 (h)'],
+                rows: L.map(function (t, i) { return [t, h2[i].toFixed(1), d2[i].toFixed(1)]; }).reverse()
+            };
+        }
+        if (kind === 'ring') {
+            var sum = function (k) { return win(k, N).reduce(function (a, b) { return a + b; }, 0); };
+            var hh = sum('hours'), dd = sum('drive'), ii = sum('idle');
+            var items = [
+                { n: '作业工时', v: Math.max(0, hh - dd - ii) },
+                { n: '行驶时长', v: dd },
+                { n: '怠速工时', v: ii }
+            ];
+            var total = items.reduce(function (a, b) { return a + b.v; }, 0) || 1;
+            return {
+                head: ['构成', '数值 (h)', '占比'],
+                rows: items.map(function (it) {
+                    return [it.n, it.v.toFixed(1), (it.v / total * 100).toFixed(1) + '%'];
+                })
+            };
+        }
+        return null;
+    }
+
     function renderAll() {
+        var cap = CAP[STATE.dim];                            /* 区间跨度硬限制在 3 个月内 */
+        if (STATE.i1 - STATE.i0 + 1 > cap) STATE.i1 = STATE.i0 + cap - 1;
+        if (STATE.i1 > BUCKETS - 1) { STATE.i1 = BUCKETS - 1; STATE.i0 = Math.max(0, STATE.i1 - cap + 1); }
         var v = renderCards();
         renderLine();
         renderBarV();
@@ -854,33 +1490,32 @@ html.embed .dash { max-width: none; padding: 0; }
         renderRing(v);
         renderTable();
         var m = DIM_META[STATE.dim];
-        document.getElementById('tLine').textContent = '工时结构趋势（近 7 ' + m.unitTxt + ' · ' + m.suffix + '）';
-        document.getElementById('tBarV').textContent = '工时构成（近 12 ' + m.unitTxt + ' · 3 指标）';
-        document.getElementById('tBarH').textContent = '工时对比（近 7 ' + m.unitTxt + ' · 水平排布）';
-        document.getElementById('tTable').textContent = '周期明细（近 7 ' + m.unitTxt + ' · ' + m.suffix + '）';
-        /* 页头：设备下拉 + 元信息跟随当前设备 */
-        var dev = curDev();
-        document.getElementById('metaSn').textContent = dev.no;
-        document.getElementById('metaModel').textContent = dev.model;
-        var pick = document.getElementById('devPick');
-        if (pick && pick.value !== String(STATE.dev)) pick.value = String(STATE.dev);
+        document.getElementById('tLine').textContent = '工时结构趋势（近 ' + (STATE.i1 - STATE.i0 + 1) + ' ' + m.unitTxt + ' · ' + m.suffix + '）';
+        document.getElementById('tBarV').textContent = '工时构成（近 ' + (STATE.i1 - STATE.i0 + 1) + ' ' + m.unitTxt + ' · 3 指标）';
+        document.getElementById('tBarH').textContent = '工时对比（近 ' + (STATE.i1 - STATE.i0 + 1) + ' ' + m.unitTxt + ' · 水平排布）';
+        document.getElementById('tTable').textContent = '周期明细（近 ' + (STATE.i1 - STATE.i0 + 1) + ' ' + m.unitTxt + ' · ' + m.suffix + '）';
+        /* 页头：设备下拉跟随当前设备（编号与名称都已在选项里，不再单独显示元信息） */
+        var dl = document.getElementById('devLabel');
+        if (dl) { var cd = curDev(); dl.textContent = cd.no + '（' + cd.name + '）'; }
         syncToolbar();
+        syncPickers();                                   /* 选择器类型 / 起止值跟着维度与翻页走 */
     }
     function switchDim(dim) {                                     /* 切维度＝回到最新周期（与 App 一致） */
         if (!DIM_META[dim]) return;
         STATE.dim = dim;
-        STATE.back = 0;
-        renderAll();
-    }
-    function shiftPeriod(delta) {                                 /* delta=+1 往更早的周期看 */
-        STATE.back = Math.min(MAX_BACK, Math.max(0, STATE.back + delta));
+        var capNew = CAP[dim];
+        STATE.i1 = BUCKETS - 1;
+        STATE.i0 = Math.max(0, STATE.i1 - (capNew >= 7 ? (dim === 'week' ? 6 : 6) : capNew - 1));
         renderAll();
     }
     Array.prototype.slice.call(document.querySelectorAll('#dimTabs .seg-btn')).forEach(function (b) {
-        b.addEventListener('click', function () { switchDim(b.dataset.dim); });
+        b.addEventListener('click', function () {
+            if (b.classList.contains('active')) return;
+            /* 切换维度也走一次加载（骨架 1.2 秒），用于演示弱网与失败重试 */
+            var run = window.runReportLoad || function (fn) { fn(); };
+            run(function () { switchDim(b.dataset.dim); }, 1200);
+        });
     });
-    document.getElementById('navPrev').addEventListener('click', function () { shiftPeriod(1); });
-    document.getElementById('navNext').addEventListener('click', function () { shiftPeriod(-1); });
 
     /* 设备切换：换设备＝重建序列并整页重绘（同时回到最新周期，与切维度同一套语义） */
     function switchDevice(idx) {
@@ -891,15 +1526,78 @@ html.embed .dash { max-width: none; padding: 0; }
         SER = {};                                                 /* 设备换了，缓存序列失效 */
         renderAll();
     }
-    (function initDevicePicker() {
-        var pick = document.getElementById('devPick');
-        if (!pick) return;
-        pick.innerHTML = DEVICE_LIST.map(function (d, i) {
-            return '<option value="' + i + '">' + d.name + '（' + d.no.slice(-4) + '）</option>';
+    /* ======================================================================
+       选择资产（单机口径：模型组 → 单台设备，单选）
+       ====================================================================== */
+    var mdSel = 0, mdType = null;
+
+    function modelGroups() {
+        var map = {}, order = [];
+        DEVICE_LIST.forEach(function (d, i) {
+            var g = d.model || '未分组';
+            if (!map[g]) { map[g] = []; order.push(g); }
+            map[g].push(i);
+        });
+        return { order: order, map: map };
+    }
+    function renderMd() {
+        var mg = modelGroups();
+        /* 单机口径：只选一台设备，左侧模型组不显示台数 */
+        document.getElementById('mdTypes').innerHTML = mg.order.map(function (g) {
+            return '<div class="gp-type' + (g === mdType ? ' active' : '') + '" data-mg="' + g + '">' +
+                '<span class="gp-tname">' + g + '</span></div>';
         }).join('');
-        pick.value = String(STATE.dev);
-        pick.addEventListener('change', function () { switchDevice(pick.value); });
+        var idxs = mg.map[mdType] || [];
+        document.getElementById('mdDevs').innerHTML = idxs.length ? idxs.map(function (i) {
+            var d = DEVICE_LIST[i];
+            return '<div class="gp-dev' + (i === mdSel ? ' on' : '') + '" data-idx="' + i + '">' +
+                '<span class="gp-main"><span class="gp-no">' + d.no + '　' + d.name + '</span>' +
+                '<span class="gp-nm">型号：' + (d.model || '—') + '</span></span>' +
+                '<span class="gp-check">✓</span></div>';
+        }).join('') : '<div class="gp-empty">该模型组下暂无设备</div>';
+    }
+    function openDevModal() {
+        mdSel = STATE.dev;
+        mdType = DEVICE_LIST[mdSel] ? (DEVICE_LIST[mdSel].model || '未分组') : (modelGroups().order[0] || null);
+        renderMd();
+        document.getElementById('mdMask').classList.add('show');
+    }
+    function closeDevModal() { document.getElementById('mdMask').classList.remove('show'); }
+    (function initDevicePicker() {
+        var trig = document.getElementById('devTrigger');
+        if (!trig) return;
+        trig.addEventListener('click', openDevModal);
+        document.getElementById('mdClose').addEventListener('click', closeDevModal);
+        document.getElementById('mdMask').addEventListener('click', function (e) { if (e.target.id === 'mdMask') closeDevModal(); });
+        document.getElementById('mdTypes').addEventListener('click', function (e) {
+            var el = e.target.closest('[data-mg]');
+            if (!el) return;
+            mdType = el.getAttribute('data-mg');
+            renderMd();
+        });
+        document.getElementById('mdDevs').addEventListener('click', function (e) {
+            var el = e.target.closest('[data-idx]');
+            if (!el) return;
+            mdSel = Number(el.getAttribute('data-idx'));
+            renderMd();
+        });
+        document.getElementById('mdReset').addEventListener('click', function () {
+            mdSel = STATE.dev;
+            renderMd();
+        });
+        document.getElementById('mdOk').addEventListener('click', function () {
+            STATE.dev = (mdSel >= 0 && DEVICE_LIST[mdSel]) ? mdSel : STATE.dev;
+            STATE.i1 = BUCKETS - 1;
+            STATE.i0 = Math.max(0, STATE.i1 - 6);
+            SER = {};
+            closeDevModal();
+            renderAll();
+        });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDevModal(); });
     })();
+
+    document.getElementById('pickStart').addEventListener('change', onPickRange);
+    document.getElementById('pickEnd').addEventListener('change', onPickRange);
 
     renderAll();
 
@@ -912,6 +1610,294 @@ html.embed .dash { max-width: none; padding: 0; }
 
     /* 打印 / 转 PDF 前重绘一次，保证印出的是当前筛选的周期 */
     window.addEventListener('beforeprint', function () { renderAll(); });
+
+    /* 导出文件名：设备 + 明细 + 周期区间 */
+    function exportFileName() {
+        var d = (typeof curDev === 'function') ? curDev() : null;
+        var who = d ? (d.no || '') : '';
+        var s = document.getElementById('pickStart'), e = document.getElementById('pickEnd');
+        var span = (s && e && s.value && e.value) ? ('_' + s.value + '_' + e.value) : '';
+        return (who ? who + '_' : '') + '工时明细' + span + '.xlsx';
+    }
+
+    /* ======================================================================
+       下载 XLSX（2026-10-18）：纯前端生成真正的 .xlsx（zip stored，不压缩、不引库）
+       导出内容＝页面上「周期明细 / 工时明细」表格（表头 + 每行），数字单元格按数值写
+       ====================================================================== */
+    var XLSX_CRC = (function () {
+        var table = null;
+        function make() {
+            var t = new Uint32Array(256);
+            for (var i = 0; i < 256; i++) {
+                var c = i;
+                for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+                t[i] = c >>> 0;
+            }
+            return t;
+        }
+        return function (bytes) {
+            if (!table) table = make();
+            var c = 0xFFFFFFFF;
+            for (var i = 0; i < bytes.length; i++) c = table[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+            return (c ^ 0xFFFFFFFF) >>> 0;
+        };
+    })();
+
+    function utf8(str) { return new TextEncoder().encode(str); }
+
+    /* 极简 zip（stored）：files = [{name, data:Uint8Array}] */
+    function zipStore(files) {
+        var chunks = [], central = [], offset = 0;
+        files.forEach(function (f) {
+            var name = utf8(f.name), data = f.data, crc = XLSX_CRC(data);
+            var local = new DataView(new ArrayBuffer(30));
+            local.setUint32(0, 0x04034b50, true);
+            local.setUint16(4, 20, true);
+            local.setUint16(6, 0, true);
+            local.setUint16(8, 0, true);          /* stored */
+            local.setUint16(10, 0, true);
+            local.setUint16(12, 0, true);
+            local.setUint32(14, crc, true);
+            local.setUint32(18, data.length, true);
+            local.setUint32(22, data.length, true);
+            local.setUint16(26, name.length, true);
+            local.setUint16(28, 0, true);
+            chunks.push(new Uint8Array(local.buffer), name, data);
+
+            var cen = new DataView(new ArrayBuffer(46));
+            cen.setUint32(0, 0x02014b50, true);
+            cen.setUint16(4, 20, true);
+            cen.setUint16(6, 20, true);
+            cen.setUint16(8, 0, true);
+            cen.setUint16(10, 0, true);
+            cen.setUint16(12, 0, true);
+            cen.setUint16(14, 0, true);
+            cen.setUint32(16, crc, true);
+            cen.setUint32(20, data.length, true);
+            cen.setUint32(24, data.length, true);
+            cen.setUint16(28, name.length, true);
+            cen.setUint16(30, 0, true);
+            cen.setUint16(32, 0, true);
+            cen.setUint16(34, 0, true);
+            cen.setUint16(36, 0, true);
+            cen.setUint32(38, 0, true);
+            cen.setUint32(42, offset, true);
+            central.push(new Uint8Array(cen.buffer), name);
+            offset += 30 + name.length + data.length;
+        });
+        var cenSize = central.reduce(function (a, b) { return a + b.length; }, 0);
+        var end = new DataView(new ArrayBuffer(22));
+        end.setUint32(0, 0x06054b50, true);
+        end.setUint16(8, files.length, true);
+        end.setUint16(10, files.length, true);
+        end.setUint32(12, cenSize, true);
+        end.setUint32(16, offset, true);
+        return new Blob(chunks.concat(central, [new Uint8Array(end.buffer)]),
+            { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    }
+
+    function xmlEsc(s) {
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function colName(i) {
+        var s = '';
+        i += 1;
+        while (i > 0) { var m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); }
+        return s;
+    }
+    /* rows: 二维数组（字符串或数字） */
+    function sheetXml(rows) {
+        var out = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+            '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>';
+        rows.forEach(function (row, r) {
+            out += '<row r="' + (r + 1) + '">';
+            row.forEach(function (v, c) {
+                var ref = colName(c) + (r + 1);
+                if (v === '' || v === null || v === undefined) return;
+                if (typeof v === 'number' && isFinite(v)) {
+                    out += '<c r="' + ref + '"><v>' + v + '</v></c>';
+                } else {
+                    out += '<c r="' + ref + '" t="inlineStr"><is><t xml:space="preserve">' + xmlEsc(v) + '</t></is></c>';
+                }
+            });
+            out += '</row>';
+        });
+        return out + '</sheetData></worksheet>';
+    }
+
+    function buildXlsx(rows, sheetName) {
+        var files = [
+            { name: '[Content_Types].xml', data: utf8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+                '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+                '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+                '<Default Extension="xml" ContentType="application/xml"/>' +
+                '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+                '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+                '</Types>') },
+            { name: '_rels/.rels', data: utf8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+                '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+                '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+                '</Relationships>') },
+            { name: 'xl/workbook.xml', data: utf8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+                '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ' +
+                'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+                '<sheets><sheet name="' + xmlEsc(sheetName || 'Sheet1') + '" sheetId="1" r:id="rId1"/></sheets></workbook>') },
+            { name: 'xl/_rels/workbook.xml.rels', data: utf8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+                '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+                '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
+                '</Relationships>') },
+            { name: 'xl/worksheets/sheet1.xml', data: utf8(sheetXml(rows)) }
+        ];
+        return zipStore(files);
+    }
+
+    /* 把页面上的明细表读成二维数组：表头 + 数据行 */
+    function tableToRows(table) {
+        if (!table) return [];
+        var rows = [];
+        var head = table.querySelectorAll('thead th');
+        if (head.length) rows.push(Array.prototype.map.call(head, function (th) { return th.textContent.trim(); }));
+        table.querySelectorAll('tbody tr').forEach(function (tr) {
+            rows.push(Array.prototype.map.call(tr.cells, function (td) {
+                var txt = td.textContent.trim();
+                var num = Number(txt.replace(/,/g, '').replace(/%$/, ''));
+                return (txt && isFinite(num) && /^-?[\d,]+(\.\d+)?%?$/.test(txt)) ? num : txt;
+            }));
+        });
+        return rows;
+    }
+
+    function downloadXlsx() {
+        var table = document.querySelector('#detailBody') ? document.querySelector('#detailBody').closest('table') : null;
+        var rows = tableToRows(table);
+        if (!rows.length) { alert('没有可导出的明细数据'); return; }
+        var name = (typeof exportFileName === 'function') ? exportFileName() : '报表明细.xlsx';
+        var blob = buildXlsx(rows, '明细');
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    }
+
+    document.getElementById('btnXlsx').addEventListener('click', downloadXlsx);
+
+    /* ==================== 加载态（骨架屏）/ 失败态（2026-10-19） ====================
+       · 首屏进入：骨架 3 秒；切换日 / 周 / 月：骨架 1.2 秒
+       · 每次加载计入会话计数，第 2 次加载模拟失败；?fail=1 强制失败、?ok=1 强制成功
+       · 遮罩只覆盖报表卡片区（.main），页头 / 工具条 / 侧栏保持可用 */
+    (function initPageLoading() {
+        var mask = document.getElementById('pageLoad');
+        if (!mask) return;
+        var title = document.getElementById('plTitle');
+        var desc = document.getElementById('plDesc');
+        var retry = document.getElementById('plRetry');
+        var LOAD_KEY = 'rpt_load_count';
+        var loadNo = 0;
+
+        function nextNo() {
+            loadNo += 1;
+            try { sessionStorage.setItem(LOAD_KEY, String(loadNo)); } catch (e) { }
+            return loadNo;
+        }
+        function placeMask() {
+            var host = document.querySelector('.main');
+            if (!host) return;
+            var r = host.getBoundingClientRect();
+            mask.style.top = r.top + 'px';
+            mask.style.left = r.left + 'px';
+            mask.style.width = r.width + 'px';
+            mask.style.height = r.height + 'px';
+        }
+        function showLoading() {
+            placeMask();
+            mask.classList.add('show');
+            mask.classList.remove('fail');
+        }
+        function showSuccess() {
+            mask.classList.remove('show');
+        }
+        function showFail() {
+            mask.classList.add('show');
+            mask.classList.add('fail');
+            if (title) title.textContent = '报表加载失败';
+            if (desc) desc.textContent = '网络异常或服务暂时不可用，请稍后重试。';
+        }
+        function shouldFailNow(no) {
+            if (/[?&]fail=1/.test(location.search)) return true;
+            if (/[?&]ok=1/.test(location.search)) return false;
+            return no === 2;                      /* 本会话第 2 次加载＝演示失败 */
+        }
+
+        /* 统一入口：显示骨架 → 到点执行 apply() → 按计数决定成功 / 失败 */
+        function runReportLoad(apply, ms) {
+            showLoading();
+            var no = nextNo();
+            setTimeout(function () {
+                try { if (apply) apply(); } catch (e) { }
+                if (shouldFailNow(no)) showFail(); else showSuccess();
+            }, ms || 1200);
+        }
+        window.runReportLoad = runReportLoad;
+
+        window.addEventListener('resize', function () {
+            if (mask.classList.contains('show')) placeMask();
+        });
+
+        /* 「重新加载」＝重试：一定成功（不再计入失败判定），避免用户被卡在失败态 */
+        retry.addEventListener('click', function () {
+            nextNo();                             /* 仍计入会话加载次数 */
+            showLoading();
+            setTimeout(showSuccess, 1200);
+        });
+
+        runReportLoad(null, 3000);                /* 首屏加载 */
+    })();
+
+
+    /* ==================== 分享（右上角图标，2026-10-18） ==================== */
+    (function initShare() {
+        var btn = document.getElementById('shareBtn');
+        var pop = document.getElementById('sharePop');
+        if (!btn || !pop) return;
+        var tip = document.createElement('div');
+        tip.className = 'share-tip';
+        document.body.appendChild(tip);
+        var tipTimer = null;
+        function showTip(msg) {
+            tip.textContent = msg;
+            tip.classList.add('show');
+            clearTimeout(tipTimer);
+            tipTimer = setTimeout(function () { tip.classList.remove('show'); }, 1600);
+        }
+        function close() { pop.classList.remove('show'); }
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            pop.classList.toggle('show');
+        });
+        pop.addEventListener('click', function (e) {
+            var b = e.target.closest('[data-share]');
+            if (!b) return;
+            var act = b.getAttribute('data-share');
+            if (act === 'copy') {
+                var url = location.href;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(url).then(function () { showTip('链接已复制，可直接发给好友'); },
+                        function () { window.prompt('复制下面这个链接：', url); });
+                } else {
+                    window.prompt('复制下面这个链接：', url);
+                }
+            }
+            close();
+        });
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.dh-share')) close();
+        });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    })();
+
+
 
 })();
 </script>

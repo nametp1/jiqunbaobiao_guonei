@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MySANY 管理后台 - 机群需求反馈（v2.0）</title>
+    <title>机群需求反馈</title>
     <style>
         * {
             box-sizing: border-box;
@@ -212,65 +212,6 @@
 
         .filter-bar input::placeholder {
             color: #bfbfbf;
-        }
-
-        /* 国家：可选可输入的组合框（输入时前端匹配选项） */
-        .combo-select {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .combo-select input {
-            width: 130px;
-            padding-right: 24px;
-        }
-
-        .combo-select .combo-arrow {
-            position: absolute;
-            right: 9px;
-            font-size: 10px;
-            color: #999;
-            pointer-events: none;
-        }
-
-        .combo-panel {
-            display: none;
-            position: absolute;
-            top: calc(100% + 4px);
-            left: 0;
-            min-width: 100%;
-            max-height: 220px;
-            overflow-y: auto;
-            padding: 4px;
-            background: #fff;
-            border: 1px solid #e5e5e5;
-            border-radius: 6px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-            z-index: 1200;
-        }
-
-        .combo-panel.show { display: block; }
-
-        .combo-panel .combo-option {
-            padding: 6px 10px;
-            font-size: 13px;
-            color: #333;
-            border-radius: 4px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .combo-panel .combo-option:hover,
-        .combo-panel .combo-option.active {
-            background: #f5f5f5;
-            color: #24839B;
-        }
-
-        .combo-panel .combo-empty {
-            padding: 8px 10px;
-            font-size: 12px;
-            color: #bbb;
         }
 
         /* 按钮组：与条件区同一行、靠右 */
@@ -778,10 +719,6 @@
         </div>
         <div class="navbar-right">
             <span class="navbar-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                中文
-            </span>
-            <span class="navbar-item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 admin@sany.com.cn
             </span>
@@ -841,15 +778,6 @@
                     <input type="text" id="f-userid" placeholder="请输入">
                 </div>
                 <div class="filter-field">
-                    <label for="f-country">国家</label>
-                    <!-- 可输入的下拉选择：点击展开、输入时前端匹配（选项来自现有数据的国家） -->
-                    <div class="combo-select" id="countryCombo">
-                        <input type="text" id="f-country" placeholder="请选择" autocomplete="off">
-                        <span class="combo-arrow">▼</span>
-                        <div class="combo-panel" id="countryPanel"></div>
-                    </div>
-                </div>
-                <div class="filter-field">
                     <label for="f-report">报表名称</label>
                     <input type="text" id="f-report" placeholder="请输入">
                 </div>
@@ -889,7 +817,6 @@
                         <tr>
                             <th>提交人</th>
                             <th>用户ID</th>
-                            <th>用户国家</th>
                             <th>申请的报表</th>
                             <th>自定义诉求</th>
                             <th>状态</th>
@@ -927,9 +854,6 @@
     <div class="confirm-dialog opt-dialog">
         <div class="confirm-title opt-title">
             <span>配置「我需要更多报表」候选报表</span>
-            <span class="opt-lang">语言
-                <select id="optLangSel" onchange="optSwitchLang(this.value)"></select>
-            </span>
         </div>
         <div class="opt-body" id="optBody"></div>
         <input type="file" id="optFile" accept="image/*" style="display:none">
@@ -1024,17 +948,15 @@ function fval(id) {
 
 function filtered() {
     const st = document.getElementById('f-status').value;
-    // 搜索条件为独立输入框：提交人 / 用户ID / 国家 / 报表名称
+    // 搜索条件为独立输入框：提交人 / 用户ID / 报表名称
     // 每个只匹配自己的字段；同时填写多个时取交集（AND）
     const fUser = fval('f-user');
     const fUserId = fval('f-userid');
-    const fCountry = fval('f-country');
     const fReport = fval('f-report');
     return REQUESTS.filter(function (r) {
         if (st && r.status !== st) return false;
         if (fUser && String(r.user || '').toLowerCase().indexOf(fUser) < 0) return false;
         if (fUserId && String(r.userId || '').toLowerCase().indexOf(fUserId) < 0) return false;
-        if (fCountry && String(r.country || '').toLowerCase().indexOf(fCountry) < 0) return false;
         if (fReport && (r.reports || []).join(' ').toLowerCase().indexOf(fReport) < 0) return false;
         return true;
     }).sort(function (a, b) { return (b.time || '').localeCompare(a.time || ''); });
@@ -1061,7 +983,7 @@ function render() {
     document.getElementById('req-count').textContent = '共 ' + list.length + ' 条';
 
     if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#bbb;padding:40px 0;">暂无提交的需求</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#bbb;padding:40px 0;">暂无提交的需求</td></tr>';
         return;
     }
 
@@ -1081,7 +1003,6 @@ function render() {
         return '<tr>'
             + '<td>' + esc(r.user || '-') + '</td>'
             + '<td style="white-space:nowrap;color:#666;">' + esc(r.userId || '-') + '</td>'
-            + '<td style="white-space:nowrap;color:#666;">' + esc(r.country || '-') + '</td>'
             + '<td style="max-width:300px;color:#333;">' + reportsText + '</td>'
             + '<td style="max-width:300px;color:#666;">' + note + '</td>'
             + '<td>' + statusTag(r.status) + '</td>'
@@ -1119,7 +1040,6 @@ function resetFilter() {
     document.getElementById('f-status').value = '';
     document.getElementById('f-user').value = '';
     document.getElementById('f-userid').value = '';
-    document.getElementById('f-country').value = '';
     document.getElementById('f-report').value = '';
     render();
 }
@@ -1164,76 +1084,6 @@ function confirmStatusChange() {
     setStatus(p.id, p.next);   // 真正应用变更（内部会重渲染 + 提示）
 }
 
-// ==================== 国家：可输入的下拉选择（前端匹配） ====================
-// 选项来自现有数据里出现过的国家（去重 + 排序），新国家自动出现在列表里
-function countryOptions() {
-    const seen = {};
-    REQUESTS.forEach(function (r) { if (r.country) seen[r.country] = true; });
-    return Object.keys(seen).sort();
-}
-
-function openCountryPanel(keyword) {
-    const panel = document.getElementById('countryPanel');
-    if (!panel) return;
-    const kw = (keyword || '').trim().toLowerCase();
-    const list = countryOptions().filter(function (c) { return !kw || c.toLowerCase().indexOf(kw) >= 0; });
-    panel.innerHTML = list.length
-        ? list.map(function (c) {
-            return '<div class="combo-option" data-value="' + esc(c) + '">' + esc(c) + '</div>';
-        }).join('')
-        : '<div class="combo-empty">无匹配的国家</div>';
-    panel.classList.add('show');
-}
-
-function closeCountryPanel() {
-    const panel = document.getElementById('countryPanel');
-    if (panel) panel.classList.remove('show');
-}
-
-function pickCountry(value) {
-    const input = document.getElementById('f-country');
-    if (input) input.value = value;
-    closeCountryPanel();
-    render();          // 选中即生效（等同点了「搜索」）
-}
-
-(function bindCountryCombo() {
-    const combo = document.getElementById('countryCombo');
-    const input = document.getElementById('f-country');
-    const panel = document.getElementById('countryPanel');
-    if (!combo || !input || !panel) return;
-
-    input.addEventListener('focus', function () { openCountryPanel(input.value); });
-    input.addEventListener('input', function () { openCountryPanel(input.value); });   // 边输入边匹配选项
-    input.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') { closeCountryPanel(); return; }
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const first = panel.querySelector('.combo-option');
-            if (first) pickCountry(first.dataset.value);
-            else closeCountryPanel();
-        }
-    });
-    // mousedown 先于 input 的 blur 触发，避免选不中
-    panel.addEventListener('mousedown', function (e) {
-        const opt = e.target && e.target.closest ? e.target.closest('.combo-option') : null;
-        if (!opt) return;
-        e.preventDefault();
-        pickCountry(opt.dataset.value);
-    });
-    document.addEventListener('click', function (e) {
-        if (!combo.contains(e.target)) closeCountryPanel();
-    });
-})();
-
-// 点遮罩 / 按 Esc 等同取消
-document.getElementById('statusConfirm').addEventListener('click', function (e) {
-    if (e.target === this) closeStatusConfirm(true);
-});
-document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && pendingStatus) closeStatusConfirm(true);
-});
-
 // ====================================================================
 // 候选报表清单：维护 PC 端「报表模版」页「我需要更多报表」弹窗的候选项
 // 数据来源：localStorage['mysany_more_report_options']
@@ -1242,24 +1092,6 @@ document.addEventListener('keydown', function (e) {
 const OPT_KEY = 'mysany_more_report_options';
 // 标签文案：候选项一律「可申请」（「已规划」状态 2026-09-24 按用户要求删除；历史数据自动归为「可申请」）
 const OPT_TAG_TEXT = { apply: '可申请' };
-// 候选项支持的语言（与「机群报表配置」的 LANG_CONFIG 对齐）
-const OPT_LANGS = [
-    { id: 'zh-CN', label: '简体中文' },
-    { id: 'en', label: 'English' },
-    { id: 'de', label: 'Deutsch' },
-    { id: 'id', label: 'Bahasa Indonesia' },
-    { id: 'es', label: 'Español' },
-    { id: 'pt', label: 'Português' },
-    { id: 'fr', label: 'Français' },
-    { id: 'th', label: 'ภาษาไทย' },
-    { id: 'ru', label: 'русский' },
-    { id: 'ar', label: 'العربية' },
-    { id: 'km', label: 'ភាសាខ្មែរ' },
-    { id: 'ko', label: '한국어' },
-    { id: 'it', label: 'Italiano' },
-    { id: 'ms', label: 'Bahasa Melayu' },
-    { id: 'vi', label: 'Tiếng Việt' }
-];
 // 内置默认清单：本地还没有配置时作为初始内容（name / desc 按语言存放，image = 预览图 dataURL）
 const DEFAULT_REPORT_OPTIONS = [
     { tagType: 'apply', name: { 'zh-CN': '超时工作报表', en: 'Overtime Work Report' },
@@ -1277,7 +1109,7 @@ const DEFAULT_REPORT_OPTIONS = [
 ];
 
 let optDraft = null;    // 弹窗打开期间的草稿（点「保存配置」才落盘）
-let optLang = 'zh-CN';  // 当前编辑语言
+let optLang = 'zh-CN';  // 2026-10-18：去掉语言选择后固定编辑简体中文
 let optPickIdx = -1;    // 正在上传预览图的行号
 
 // 转义：value="..." / <textarea> 用（esc() 只处理 & < >，不处理引号）
@@ -1323,22 +1155,8 @@ function openOptionManager() {
     const saved = readOptionsConfig();
     optDraft = (saved.length ? saved : DEFAULT_REPORT_OPTIONS).map(normOption);
     optLang = 'zh-CN';
-    renderOptLangSel();
     renderOptRows();
     document.getElementById('optModal').classList.add('show');
-}
-
-function renderOptLangSel() {
-    const sel = document.getElementById('optLangSel');
-    if (!sel) return;
-    sel.innerHTML = OPT_LANGS.map(function (l) {
-        return '<option value="' + l.id + '"' + (l.id === optLang ? ' selected' : '') + '>' + l.label + '</option>';
-    }).join('');
-}
-
-function optSwitchLang(lang) {
-    optLang = lang || 'zh-CN';
-    renderOptRows();
 }
 
 function closeOptionManager() {

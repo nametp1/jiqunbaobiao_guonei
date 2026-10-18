@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MySANY 管理后台 - 机群报表配置（v2.0）</title>
+    <title>机群报表配置</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -81,11 +81,6 @@
         .tag-gray { background: #fafafa; color: #999; border: 1px solid #d9d9d9; }
         .tag-red { background: rgba(41,190,206,.12); color: #24839B; border: 1px solid rgba(41,190,206,.45); }
         .tag-cyan { background: rgba(41,190,206,.10); color: #24839B; border: 1px solid rgba(41,190,206,.35); }
-        .lang-tag {
-            display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px;
-            margin: 0 2px; background: rgba(41,190,206,.12); color: #24839B; border: 1px solid rgba(41,190,206,.45); line-height: 16px;
-        }
-        .lang-tag.missing { background: #fafafa; color: #bbb; border: 1px dashed #d9d9d9; }
 
         /* 页面标题 */
         .page-header {
@@ -128,12 +123,6 @@
         .filter-btn.primary { background: #24839B; color: #fff; border-color: #29BECE; }
         .filter-btn.primary:hover { background: #226884; border-color: #226884; }
 
-        /* 语言标签组 */
-        .lang-tag-list { display: flex; flex-wrap: wrap; gap: 3px; }
-        .lang-tag {
-            font-size: 11px; padding: 1px 6px; border-radius: 3px;
-            background: rgba(41,190,206,.07); color: #24839B; border: 1px solid rgba(41,190,206,.22); white-space: nowrap;
-        }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         table thead th {
             background: #fafafa; padding: 12px 14px; text-align: left;
@@ -168,16 +157,27 @@
         }
         .form-select:focus { border-color: #29BECE; outline: none; }
         .form-hint { font-size: 12px; color: #999; margin-top: 4px; line-height: 1.6; }
+        .form-hint code { font-family: 'Consolas','Monaco','Courier New',monospace; font-size: 11.5px; color: #24839B; background: #f2fafb; border: 1px solid #d9eff2; border-radius: 3px; padding: 0 4px; }
 
         .tpl-icon { width: 32px; height: 32px; border-radius: 4px; object-fit: contain; vertical-align: middle; }
+        /* 模版图标上传（2026-10-18） */
+        .icon-picker { display: flex; align-items: flex-start; gap: 14px; }
+        .icon-preview {
+            width: 56px; height: 56px; flex: 0 0 56px; display: flex; align-items: center; justify-content: center;
+            border: 1px dashed #d9d9d9; border-radius: 8px; background: #fafafa;
+            font-size: 20px; color: #bbb; cursor: pointer; overflow: hidden; transition: border-color .15s;
+        }
+        .icon-preview:hover { border-color: #29BECE; color: #29BECE; }
+        .icon-preview img { width: 100%; height: 100%; object-fit: contain; }
+        .icon-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .icon-btn {
+            height: 30px; padding: 0 12px; font-family: inherit; font-size: 12.5px;
+            color: #24839B; background: #fff; border: 1px solid #bfe4e9; border-radius: 6px; cursor: pointer;
+        }
+        .icon-btn:hover { background: #f2fafb; border-color: #29BECE; }
+        .icon-btn.ghost { color: #888; border-color: #e3e3e3; }
+        .icon-btn.ghost:hover { color: #d4380d; border-color: #ffd8bf; background: #fff7f5; }
 
-        /* 语言下拉选择框 */
-        .lang-select-wrap { margin-bottom: 20px; }
-        .lang-select-wrap select { width: 100%; height: 34px; border: 1px solid #d9d9d9; border-radius: 6px; padding: 0 10px; font-size: 13px; color: #333; background: #fff; cursor: pointer; }
-        .lang-select-wrap select:focus { border-color: #29BECE; outline: none; box-shadow: 0 0 0 2px rgba(41,190,206,0.1); }
-        .lang-select-wrap .lang-hint { font-size: 11px; color: #999; margin-top: 4px; }
-        /* 编辑已有模版时，语言与模版类型锁定不可修改 */
-        #edit-lang-select:disabled,
         /* v2.0 合并：适用范围多选（单机 / 机群），一条模版可同时服务两种口径 */
         /* v2.0 优化：适用范围为「多选」，改用勾选卡片，避免与单选 Tab（发送方式 / 数据列配置子 Tab）混淆 */
         .scope-checks { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -779,9 +779,11 @@
 
         .canvas-wrap { padding: 14px; background: #f4f4f4; overflow: auto; height: 520px; }
         .canvas-scale { transform-origin: top left; }
+        /* 预览画布：自适应宽度的卡片（不再是固定纸页比例） */
         .canvas-page {
-            width: 780px; min-height: 1103px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.08);
-            padding-bottom: 24px; position: relative; overflow: hidden;
+            width: 100%; min-height: 420px; background: #fff; border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.08);
+            padding-bottom: 20px; position: relative; overflow: hidden;
         }
         .pdfd-head { display: flex; align-items: center; gap: 10px; padding: 14px 26px; border-bottom: 2px solid #29BECE; }
         .pdfd-logo { background: #24839B; color: #fff; font-weight: 900; font-size: 14px; letter-spacing: 1px; padding: 3px 9px; border-radius: 2px; }
@@ -985,10 +987,6 @@
         </div>
         <div class="navbar-right">
             <span class="navbar-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                中文
-            </span>
-            <span class="navbar-item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 admin@sany.com.cn
             </span>
@@ -1042,12 +1040,6 @@
                         <option value="机群">机群</option>
                     </select>
                 </div>
-                <div class="filter-item">
-                    <label>语言类型</label>
-                    <select id="filter-lang">
-                        <option value="">全部语言</option>
-                    </select>
-                </div>
                 <div class="filter-actions">
                     <button class="filter-btn primary" onclick="filterTemplates()">搜索</button>
                     <button class="filter-btn" onclick="clearFilters()">重置</button>
@@ -1060,7 +1052,7 @@
                 <div class="table-card-header"><h3>模版列表</h3><span style="font-size:12px;color:#999" id="tpl-count">共 5 个模版</span></div>
                 <div style="overflow-x:auto;">
                     <table>
-                        <thead><tr><th style="width:50px;">图标</th><th>模版名称</th><th>模版描述</th><th>适用范围</th><th>语言</th><th>启用</th><th>最近更新</th><th>操作</th></tr></thead>
+                        <thead><tr><th style="width:50px;">图标</th><th>模版名称</th><th>模版描述</th><th>适用范围</th><th>启用</th><th>最近更新</th><th>操作</th></tr></thead>
                         <tbody id="template-table-body"></tbody>
                     </table>
                 </div>
@@ -1077,14 +1069,21 @@
             <button class="modal-close" onclick="closeEditModal()">&times;</button>
         </div>
         <div class="modal-body">
-            <!-- 语言下拉选择（与下方模版名称等联动，每次仅选中一种语言） -->
-            <label style="font-size:13px;color:#666;font-weight:500;display:block;margin-bottom:6px;">编辑语言</label>
-            <div class="lang-select-wrap">
-                <select id="edit-lang-select" onchange="switchEditLang(this.value)"></select>
-                <div class="lang-hint">切换语言后将自动保存当前编辑内容，未配置的语言将从简体中文复制</div>
+            <!-- 模版图标（2026-10-18 新增）：上传后显示在模版列表首列 -->
+            <div class="form-group icon-field">
+                <label>模版图标</label>
+                <div class="icon-picker">
+                    <div class="icon-preview" id="iconPreview" title="点击上传图标" onclick="document.getElementById('iconFile').click()">＋</div>
+                    <div class="icon-actions">
+                        <button type="button" class="icon-btn" onclick="document.getElementById('iconFile').click()">上传图标</button>
+                        <button type="button" class="icon-btn ghost" id="iconClear" onclick="clearTplIcon()">移除</button>
+                        <div class="form-hint" style="margin-top:6px;">建议 32×32 或等比 PNG / SVG，展示在模版列表首列</div>
+                    </div>
+                    <input type="file" id="iconFile" accept="image/*" style="display:none" onchange="onIconPicked(this)">
+                </div>
             </div>
 
-            <!-- 基本信息（随编辑语言联动）分两行：① 模版名称 / 模版描述 ② 启用开关 / 整体口径 -->
+            <!-- 基本信息分两行：① 模版名称 / 模版描述 ② 启用开关 / 整体口径 -->
             <div class="form-row-2">
                 <div class="form-group"><label>模版名称 <span class="required">*</span></label><input type="text" id="edit-tpl-name" placeholder="如：设备运行日报模版"></div>
                 <div class="form-group"><label>模版描述 <span class="required">*</span></label><input type="text" id="edit-tpl-desc" placeholder="如：适用于挖掘机设备每日运行数据汇报"></div>
@@ -1116,7 +1115,16 @@
                 </div>
             </div>
 
-            <!-- 步骤向导：第 1 步 XLSX/CSV 附件（可跳过）· 第 2 步 PDF 附件（最后一步）
+            <!-- 附件基本设置（2026-10-18：上移到步骤切换之上，并与「模版名称 / 描述」用同一套表单样式） -->
+            <div class="form-group">
+                <label>文件名模板</label>
+                <input type="text" id="attach-filename" placeholder="如：{{模版名称}}_{{发送日期}}">
+                <div class="form-hint">
+                    支持变量占位符，如 <code>{{模版名称}}</code> <code>{{发送日期}}</code>，发送时将自动替换为实际值，系统会自动补充文件扩展名。
+                </div>
+            </div>
+
+            <!-- 步骤向导：第 1 步 XLSX/CSV 附件（可跳过）· 第 2 步 报表版式（最后一步）
                  2026-10-16：按需求删除「邮件正文」步骤与全部邮件相关功能，向导由三步改为两步。
                  注意 data-step / wzState 编号沿用内部步骤号（2＝附件、3＝PDF），界面显示为第 1 / 2 步。 -->
             <div class="wizard-steps" id="wizardSteps">
@@ -1127,30 +1135,13 @@
                 <span class="wz-arrow">›</span>
                 <button type="button" class="wz-step" data-step="3" onclick="switchStep(3)">
                     <span class="wz-idx">2</span>
-                    <span class="wz-body"><span class="wz-name">PDF 附件</span><span class="wz-state" id="wzState3">未配置</span></span>
+                    <span class="wz-body"><span class="wz-name">报表版式</span><span class="wz-state" id="wzState3">未配置</span></span>
                 </button>
             </div>
 
             <!-- 步骤1：XLSX/CSV附件 -->
             <div class="step-panel" id="step-attachment">
 
-                <!-- 附件基本设置 -->
-                <div class="attachment-section">
-                    <div class="attach-config">
-                        <div class="section-title">附件基本设置</div>
-                        <div class="form-group">
-                            <label>文件名模板</label>
-                            <input type="text" id="attach-filename" style="width:100%;" placeholder="如：{{模版名称}}_{{发送日期}}">
-                        </div>
-                        <div class="attach-config-filename-hint">
-                            支持变量占位符，如 <code>{{模版名称}}</code> <code>{{发送日期}}</code>，发送时将自动替换为实际值。系统会自动补充文件扩展名。
-                        </div>
-                    </div>
-                </div>
-                    <div class="step-skip-note" id="skipNote2" style="display:none;">
-                        <span>第 1 步已跳过：不会生成 XLSX/CSV 附件，本步的配置不参与保存。</span>
-                        <button type="button" onclick="restoreStep(2)">恢复此步</button>
-                    </div>
 
                     <!-- 数据列配置（机群模版） -->
                     <div class="attachment-section" id="fleet-column-config" style="margin-top:12px;display:none;">
@@ -1219,22 +1210,8 @@
 
             </div>
 
-            <!-- 步骤3：PDF附件 -->
+            <!-- 步骤3：报表版式（原「PDF 附件」，国内版改为网页直接查看） -->
             <div class="step-panel" id="step-pdf" style="display:none;">
-
-                <!-- 附件基本设置（与 XLSX/CSV 附件一致） -->
-                <div class="attachment-section">
-                    <div class="attach-config">
-                        <div class="section-title">附件基本设置</div>
-                        <div class="form-group">
-                            <label>文件名模板</label>
-                            <input type="text" id="pdf-attach-filename" style="width:100%;" placeholder="如：{{模版名称}}_{{发送日期}}">
-                        </div>
-                        <div class="attach-config-filename-hint">
-                            支持变量占位符，如 <code>{{模版名称}}</code> <code>{{发送日期}}</code>，发送时将自动替换为实际值。系统会自动补充文件扩展名。
-                        </div>
-                    </div>
-                </div>
 
                 <!-- 字段库选择弹窗 -->
                 <div class="pdfpick-overlay" id="pdfPickOverlay" onclick="if(event.target===this)pdfCloseFieldPicker()">
@@ -1270,7 +1247,6 @@
                     <div class="designer-body">
                         <!-- 中：画布 -->
                         <div class="designer-col">
-                            <div class="designer-col-title">报表可视化排版画布（A4 纵向）</div>
                             <div class="canvas-wrap">
                                 <div class="canvas-scale">
                                     <div class="canvas-page" id="pdfCanvas"></div>
@@ -1301,11 +1277,10 @@
         </div>
         <div class="modal-footer wz-footer">
             <div class="wz-foot-left">
-                <button class="btn" id="wzSkipBtn" style="display:none;" onclick="skipCurrentStep()">跳过此步</button>
             </div>
             <div class="wz-foot-right">
                 <button class="btn" id="wzPrevBtn" style="display:none;" onclick="wizardPrev()">上一步</button>
-                <button class="btn btn-primary" id="wzNextBtn" onclick="wizardNext()">下一步：PDF 附件</button>
+                <button class="btn btn-primary" id="wzNextBtn" onclick="wizardNext()">下一步：报表版式</button>
                 <button class="btn btn-primary" id="wzSaveBtn" style="display:none;" onclick="saveTemplate()">完成并保存</button>
             </div>
         </div>
@@ -1370,24 +1345,6 @@
 <div id="toast-container"></div>
 
 <script>
-// ==================== 多语言配置（PRD §3.1.4 15种语言） ====================
-const LANG_CONFIG = [
-    { id: 'zh-CN', label: '简体中文', zhLabel: '简体中文', default: true },
-    { id: 'en',    label: 'English',    zhLabel: '英语' },
-    { id: 'de',    label: 'Deutsch',    zhLabel: '德语' },
-    { id: 'id',    label: 'Bahasa Indonesia', zhLabel: '印尼语' },
-    { id: 'es',    label: 'Español',    zhLabel: '西班牙语' },
-    { id: 'pt',    label: 'Português',  zhLabel: '葡萄牙语' },
-    { id: 'fr',    label: 'Français',   zhLabel: '法语' },
-    { id: 'th',    label: 'ภาษาไทย',   zhLabel: '泰语' },
-    { id: 'ru',    label: 'русский',    zhLabel: '俄语' },
-    { id: 'ar',    label: 'العربية',   zhLabel: '阿拉伯语' },
-    { id: 'km',    label: 'ភាសាខ្មែរ', zhLabel: '高棉语' },
-    { id: 'ko',    label: '한국어',     zhLabel: '韩语' },
-    { id: 'it',    label: 'Italiano',   zhLabel: '意大利语' },
-    { id: 'ms',    label: 'Bahasa Melayu', zhLabel: '马来语' },
-    { id: 'vi',    label: 'Tiếng Việt', zhLabel: '越南语' }
-];
 
 // 构建一个空翻译条目
 function emptyTranslation(name, description) {
@@ -1491,7 +1448,6 @@ function nowStr() {
 // ==================== 渲染模版列表 ====================
 function renderTemplateTable() {
     const nameQ = (document.getElementById('filter-name').value || '').trim().toLowerCase();
-    const langQ = document.getElementById('filter-lang').value || '';
     const scopeQ = (document.getElementById('filter-scope') || {}).value || '';
 
     const filtered = templates.filter((t, i) => {
@@ -1499,10 +1455,6 @@ function renderTemplateTable() {
         const name = (zhTr.name || '').toLowerCase();
         if (nameQ && !name.includes(nameQ)) return false;
         if (scopeQ && getTypes(t).indexOf(scopeQ) < 0) return false;
-        if (langQ) {
-            const langs = getConfiguredLangs(i);
-            if (!langs.includes(langQ)) return false;
-        }
         return true;
     });
 
@@ -1512,17 +1464,13 @@ function renderTemplateTable() {
     document.getElementById('tpl-count').textContent = '共 ' + totalCount + ' 个模版' + (shownCount < totalCount ? '（筛选后 ' + shownCount + ' 个）' : '');
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#bbb;padding:40px 0;">无匹配模版</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#bbb;padding:40px 0;">无匹配模版</td></tr>';
         return;
     }
 
     tbody.innerHTML = filtered.map((t, idx) => {
         const i = templates.indexOf(t);
-        const langs = getConfiguredLangs(i);
         const zhTr = t.translations['zh-CN'] || {};
-        const primaryLang = langs.length > 0 ? langs[0] : '';
-        const langCfg = primaryLang ? LANG_CONFIG.find(lc => lc.id === primaryLang) : null;
-        const langLabel = langCfg ? langCfg.label : (primaryLang || '-');
         const delDisabled = templates.length <= 1 ? 'style="color:#bbb;cursor:not-allowed;" title="至少保留一个模版"' : '';
         const iconHtml = t.icon ? `<img class="tpl-icon" src="${t.icon}" alt="">` : '<span style="color:#ccc;font-size:18px;">📄</span>';
         return `<tr>
@@ -1530,7 +1478,6 @@ function renderTemplateTable() {
             <td><strong>${zhTr.name || '(未命名)'}</strong></td>
             <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${zhTr.description || ''}</td>
             <td class="scope-cell">${scopeTagsHtml(getTypes(t))}</td>
-            <td><span class="tag tag-blue">${langLabel}</span></td>
             <td><span class="tag ${t.enabled ? 'tag-green' : 'tag-gray'}">${t.enabled ? '已启用' : '已停用'}</span></td>
             <td>${t.updatedAt}</td>
             <td><span class="operate-links">
@@ -1555,7 +1502,6 @@ function filterTemplates() {
 // 清除筛选
 function clearFilters() {
     document.getElementById('filter-name').value = '';
-    document.getElementById('filter-lang').value = '';
     const scopeEl = document.getElementById('filter-scope');
     if (scopeEl) scopeEl.value = '';
     renderTemplateTable();
@@ -1565,11 +1511,8 @@ function clearFilters() {
 function openEditModal(index, isNew) {
     currentTemplateId = index;
     addFlow = !!isNew;   // 新建入口 = 新增流程（保存不关弹窗、提示「添加成功」）
-    currentEditLang = 'zh-CN';
-    // 优先打开已有翻译的语言
-    const langs = getConfiguredLangs(index);
-    if (langs.includes('zh-CN')) currentEditLang = 'zh-CN';
-    else if (langs.length > 0) currentEditLang = langs[0];
+    currentEditLang = 'zh-CN';   /* 2026-10-18：去掉「编辑语言」后固定编辑简体中文 */
+    iconDraft = null;            /* 图标草稿重置为「未改动」 */
 
     // 清空表格构建器缓存并重置到第 1 步（XLSX/CSV 附件）
     tbDataKV = null;
@@ -1580,9 +1523,10 @@ function openEditModal(index, isNew) {
     pdfColLoaded = false;
     document.getElementById('edit-modal').classList.add('show');
     loadEditForm(isNew);
+    renderIconPreview();
     // 首次定位不落库（noSave），避免空表单 / 未加载的附件区把已存配置覆盖掉
     switchStep(2, true);
-    // 打开后自动定位到顶部（编辑语言区域）
+    // 打开后自动定位到顶部（模版名称区域）
     scrollEditModalTop();
     [60, 200].forEach(ms => setTimeout(scrollEditModalTop, ms));
 }
@@ -1618,78 +1562,46 @@ function loadEditForm(isNew) {
     toggleDataColumnConfig(true);
     bindStepDirty();
     refreshWizard();
-    // 编辑已有模版时语言锁定不可修改
-    const editLangSel = document.getElementById('edit-lang-select');
-    if (editLangSel) editLangSel.disabled = !isNew;
     document.getElementById('edit-tpl-enabled').checked = t.enabled;
     syncEnabledState();
 
-    // 更新语言选择器
-    updateLangSelect();
 }
 
-function updateLangSelect() {
-    const sel = document.getElementById('edit-lang-select');
-    if (!sel) return;
-    const configuredLangs = getConfiguredLangs(currentTemplateId);
-    sel.innerHTML = LANG_CONFIG.map(lc => {
-        const configured = configuredLangs.includes(lc.id);
-        const label = configured ? lc.label : lc.label + ' (' + (lc.zhLabel || lc.label) + ')';
-        return `<option value="${lc.id}" ${lc.id === currentEditLang ? 'selected' : ''}>${label}</option>`;
-    }).join('');
-}
+/* ==================== 模版图标上传（2026-10-18） ====================
+   iconDraft：null＝未改动（沿用原值）｜''＝已移除｜dataURL＝新图 */
+let iconDraft = null;
 
-function switchEditLang(lang) {
-    if (!lang || lang === currentEditLang) return;
-    // 保存当前编辑内容（含附件表格）
-    saveEditToState();
-    currentEditLang = lang;
+function renderIconPreview() {
+    const box = document.getElementById('iconPreview');
+    if (!box) return;
     const t = templates[currentTemplateId];
-    // 单语言模式：检查当前语言是否有翻译
-    const existingTr = t.translations[lang];
-    if (existingTr && existingTr.name) {
-        // 已有该语言翻译，清除其它语言
-        for (const key of Object.keys(t.translations)) {
-            if (key !== lang) delete t.translations[key];
-        }
-    } else {
-        // 用中文内容初始化当前语言，清空其他所有语言
-        const zhTr = getT(currentTemplateId, 'zh-CN') || {};
-        const lc = LANG_CONFIG.find(c => c.id === lang);
-        const newTr = {
-            name: zhTr.name ? zhTr.name + ' (' + (lc ? lc.label : lang) + ')' : '',
-            description: zhTr.description || '',
-            attachmentFileName: zhTr.attachmentFileName || '',
-            pdfAttachmentFileName: zhTr.pdfAttachmentFileName || '',
-            pdfDocKV: zhTr.pdfDocKV ? zhTr.pdfDocKV.map(r => [r[0]||'', r[1]||'']) : [['', '']],
-            attachmentTableKV: zhTr.attachmentTableKV ? (
-                Array.isArray(zhTr.attachmentTableKV)
-                    ? zhTr.attachmentTableKV.map(r => [r[0]||'', r[1]||''])
-                    : JSON.parse(JSON.stringify(zhTr.attachmentTableKV))
-            ) : undefined,
-            pdfAttachmentTableKV: zhTr.pdfAttachmentTableKV ? JSON.parse(JSON.stringify(zhTr.pdfAttachmentTableKV)) : undefined
-        };
-        // 清空所有语言，只保留当前一个
-        t.translations = {};
-        t.translations[lang] = newTr;
-    }
-    // 重置到第 1 步（XLSX/CSV 附件）并清空表格构建器缓存
-    tbDataKV = null;
-    window._scModelKV = null;
-    window._pdfScModelKV = null;
-    // v2.0 合并：数据列配置是否已加载，避免步骤未进入时被 saveEditToState 覆盖成默认值
-    attColLoaded = false;
-    pdfColLoaded = false;
-    // 先回填表单再切步（切步会 saveEditToState，顺序反了会把上一个语言的表单值写到新语言上）
-    loadEditForm(editIsNew);
-    switchStep(2, true);
-    scrollEditModalTop();
-    [60, 160, 360].forEach(ms => setTimeout(scrollEditModalTop, ms));
+    const src = (iconDraft === null) ? (t && t.icon) : iconDraft;
+    box.innerHTML = src ? '<img src="' + src + '" alt="">' : '＋';
+}
+
+function onIconPicked(input) {
+    const file = input && input.files && input.files[0];
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { showToast('请选择图片文件', 'error'); input.value = ''; return; }
+    if (file.size > 512 * 1024) { showToast('图标请控制在 512KB 以内', 'error'); input.value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = function () {
+        iconDraft = String(reader.result || '');
+        renderIconPreview();
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+}
+
+function clearTplIcon() {
+    iconDraft = '';
+    renderIconPreview();
 }
 
 function saveEditToState() {
     const t = templates[currentTemplateId];
     if (!t) return;   // 模版已被删除 / 索引越界时不动数据
+    if (iconDraft !== null) t.icon = iconDraft;   /* 图标随模版保存（与语言无关） */
     if (hasLang(currentTemplateId, currentEditLang)) {
         t.translations[currentEditLang].name = document.getElementById('edit-tpl-name').value.trim();
         t.translations[currentEditLang].description = document.getElementById('edit-tpl-desc').value.trim();
@@ -1706,10 +1618,8 @@ function saveEditToState() {
     // ── XLSX / CSV 附件（内部步骤号 2）──
     if (!editStepSkip[2]) {
         // 该步内容已加载才回写（否则输入框还是空值，会把已保存的文件名清空）
-        if (attColLoaded) {
-            const attNameEl = document.getElementById('attach-filename');
-            trObj.attachmentFileName = attNameEl ? attNameEl.value.trim() : '';
-        }
+        const attNameEl2 = document.getElementById('attach-filename');
+        if (attNameEl2) trObj.attachmentFileName = attNameEl2.value.trim();   /* 已上移到步骤切换上方，始终可见 */
         // 机群那套：行式列配置（仅在步骤已加载时才写，避免覆盖已保存配置）
         if (s2.fleet && attColLoaded && Array.isArray(tbDataKV)) {
             trObj.attachmentTableKVFleet = tbDataKV.map(r => [r[0]||'', r[1]||'']);
@@ -1721,12 +1631,10 @@ function saveEditToState() {
         }
     }
 
-    // ── PDF 附件（内部步骤号 3；字段绑定与版式存在 pdfDesignerJson 里，随模版保存落库）──
+    // ── 报表版式（内部步骤号 3；字段绑定与版式存在 pdfDesignerJson 里，随模版保存落库）──
     if (!editStepSkip[3]) {
-        if (pdfColLoaded) {
-            const pdfFilenameEl = document.getElementById('pdf-attach-filename');
-            trObj.pdfAttachmentFileName = pdfFilenameEl ? pdfFilenameEl.value.trim() : '';
-        }
+        /* 2026-10-18：报表版式不再单独配文件名，沿用上方「文件名模板」 */
+        trObj.pdfAttachmentFileName = trObj.attachmentFileName || '';
         // 原「查看 json」入口已移除：版式 JSON 改为保存时静默落库（否则重开设计器会丢版式）
         if (pdfV3) trObj.pdfDesignerJson = JSON.stringify(pdfV3Payload());
     }
@@ -1746,8 +1654,7 @@ function closeEditModal() {
 function saveTemplate() {
     saveEditToState();
     const t = templates[currentTemplateId];
-    // 原型为单语言模式：切换「编辑语言」会重建该语言内容（其它语言被清掉），
-    // 所以必填校验按**当前编辑语言**判定，而不是固定中文
+    // 原型为单语言模式（只有简体中文）：必填校验按当前编辑语言判定
     const curTr = getT(currentTemplateId, currentEditLang);
     if (!curTr || !curTr.name) { showToast('模版名称不能为空', 'error'); return; }
     // 描述字段名为 description（兼容历史数据里的 desc）
@@ -1755,7 +1662,7 @@ function saveTemplate() {
     if (!getTypes(t).length) { showToast('请选择适用范围', 'error'); return; }
     t.updatedAt = nowStr();
     renderTemplateTable();
-    // 新增模版：提交后不关闭弹窗，只提示「添加成功」，便于直接切换「编辑语言」继续添加其它语言
+    // 新增模版：提交后不关闭弹窗，只提示「添加成功」，可继续补充配置
     if (addFlow) {
         scrollEditModalTop();
         showToast('添加成功', 'success');
@@ -1964,7 +1871,7 @@ function initPdfDesigner() {
 }
 
 function pdfV3RenderAll() {
-    if (!pdfV3) return;        // 尚未初始化（未进入 PDF 附件那步）时直接忽略
+    if (!pdfV3) return;        // 尚未初始化（未进入「报表版式」那步）时直接忽略
     pdfSyncScopeSelection();   // 单机 / 机群 各一套模块：切换后自动落到当前口径的那一套
     const nameView = document.getElementById('pdfTplNameView');
     if (nameView) nameView.textContent = pdfV3TplName();
@@ -2145,7 +2052,7 @@ function pdfV3RenderProps() {
     }
 
     html += '<div class="prop-head">PDF 物理排版</div>'
-        + '<div class="prop-group"><label>纸张宽度占比</label><select onchange="pdfUpdateSelected(\'pdfWidth\', this.value)">'
+        + '<div class="prop-group"><label>宽度占比</label><select onchange="pdfUpdateSelected(\'pdfWidth\', this.value)">'
         + '<option value="100%"' + (c.pdfWidth === '100%' ? ' selected' : '') + '>100%（满宽整行）</option>'
         + '<option value="50%"' + (c.pdfWidth === '50%' ? ' selected' : '') + '>50%（半宽并排）</option></select></div>'
         + '<div style="margin-top:16px;border-top:1px solid #f0f0f0;padding-top:12px">'
@@ -2253,7 +2160,7 @@ function pdfRemoveMetric(i) {
     pdfV3RenderAll();
 }
 
-// 顶部「统计时间维度」在进入 PDF 附件那步之前就能勾选：此时设计器还没初始化，只留 DOM 状态，
+// 顶部「统计时间维度」在进入「报表版式」那步之前就能勾选：此时设计器还没初始化，只留 DOM 状态，
 // 由 initPdfDesigner() 按 DOM 读取（否则会抛错、且用户的勾选会被默认值覆盖）
 function readTimeDimsFromDom() {
     return [].filter.call(document.querySelectorAll('#edit-modal [data-td]'), el => el.checked)
@@ -2834,7 +2741,7 @@ function switchStep(stepNum, noSave) {
     scrollEditModalTop();
 }
 
-// ==================== 向导（两步：XLSX/CSV 附件 · PDF 附件）：单机 / 机群 口径跟随两步的配置 ====================
+// ==================== 向导（两步：XLSX/CSV 附件 · 报表版式）：单机 / 机群 口径跟随两步的配置 ====================
 // 读取模版适用范围（新结构 machineTypes；老数据 machineType 兜底兼容）
 function getTypes(t) {
     if (t && Array.isArray(t.machineTypes) && t.machineTypes.length) return t.machineTypes.slice();
@@ -2845,7 +2752,7 @@ function getTypes(t) {
 let editWizardStep = 2;
 let editIsNew = false;          // 新建 vs 编辑已有模版（新建时「已配置」只认用户操作）
 // 「新增流程」标记：从列表「新建模版」进入即置 true，直到关闭弹窗才复位。
-// 注意不能用 editIsNew —— 切换「编辑语言」会调 loadEditForm() 把它冲成 false）
+// 注意不能用 editIsNew —— loadEditForm() 会把它冲成 false）
 let addFlow = false;
 let editStepSkip = { 2: false, 3: false };
 let editScopeByStep = { 2: { single: true, fleet: true }, 3: { single: true, fleet: true } };
@@ -2886,24 +2793,6 @@ function toggleEditType(type) {
     refreshWizard();
 }
 
-// 跳过 / 恢复某一步（仅 XLSX/CSV 附件那步可跳过；PDF 附件是最后一步，直接保存即可）
-function skipCurrentStep() {
-    const s = editWizardStep;
-    if (s !== 2) return;
-    editStepSkip[2] = true;
-    toggleDataColumnConfig(true);
-    showToast('已跳过第 1 步：不生成 XLSX/CSV 附件', 'success');
-    refreshWizard();
-    saveEditToState();
-}
-function restoreStep(s) {
-    editStepSkip[s] = false;
-    if (s === 2) toggleDataColumnConfig(true);
-    showToast('已恢复「' + (s === 2 ? 'XLSX/CSV 附件' : 'PDF 附件') + '」的配置', 'success');
-    refreshWizard();
-}
-
-// 该步是否已有内容（含载入的已有模版数据）
 function stepHasContent(s) {
     if (editStepTouched[s]) return true;
     // 新建模版：不把模版对象的默认值算成"已配置"
@@ -2960,26 +2849,18 @@ function refreshWizard() {
     // 各步的跳过提示
     [2, 3].forEach(s => {
         const note = document.getElementById('skipNote' + s);
-        if (note) note.style.display = editStepSkip[s] ? '' : 'none';
     });
 
     const prev = document.getElementById('wzPrevBtn');
     const next = document.getElementById('wzNextBtn');
     const save = document.getElementById('wzSaveBtn');
-    const skip = document.getElementById('wzSkipBtn');
     const s = editWizardStep;
     if (prev) prev.style.display = s > 1 ? '' : 'none';
     if (next) {
         next.style.display = s < 3 ? '' : 'none';
-        next.textContent = '下一步：PDF 附件';
+        next.textContent = '下一步：报表版式';
     }
     if (save) save.style.display = s === 3 ? '' : 'none';
-    if (skip) {
-        // 只有 XLSX/CSV 附件那步可跳过（PDF 附件是最后一步，直接「完成并保存」即可）
-        const canSkip = (s === 2) && !editStepSkip[2];
-        skip.style.display = canSkip ? '' : 'none';
-        skip.textContent = '跳过此步（不生成 XLSX/CSV 附件）';
-    }
 }
 
 // 向导前后翻页：翻页前校验基本信息（名称 / 描述必填），最后一步「下一步」= 完成并保存
@@ -3074,9 +2955,7 @@ function initAttachmentTable() {
 function initPdfSection() {
     const tr = getT(currentTemplateId, currentEditLang);
 
-    // 恢复文件名模板
-    const defName = defaultAttachmentFileName();
-    document.getElementById('pdf-attach-filename').value = tr.pdfAttachmentFileName || defName;
+    /* 文件名统一用上方的「文件名模板」（本步不再有独立输入框） */
     // 字段绑定与版式统一由设计器承载（单机 / 机群 各一套数据模块），由 initPdfDesigner() 初始化
     pdfColLoaded = true;
 }
@@ -4337,15 +4216,6 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 });
 
 // ==================== 初始化 ====================
-// 填充语言筛选下拉
-(function() {
-    const sel = document.getElementById('filter-lang');
-    if (sel) {
-        sel.innerHTML = '<option value="">全部语言</option>' + LANG_CONFIG.map(lc =>
-            '<option value="' + lc.id + '">' + lc.label + ' (' + (lc.zhLabel || lc.label) + ')</option>'
-        ).join('');
-    }
-})();
 renderTemplateTable();</script>
 </body>
 </html>
