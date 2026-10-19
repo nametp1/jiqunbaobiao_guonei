@@ -612,15 +612,6 @@
     }
     .picker-empty { padding: 40px 16px; text-align: center; font-size: 12px; color: #b0b4bd; }
 
-    /* ================= 已选设备标签（周期 Tab 下方：类型 + 台数 + 命中分组） ================= */
-    .fs-chips { display: none; align-items: center; flex-wrap: wrap; gap: 6px; margin: -4px 16px 12px; }
-    .fs-chips.on { display: flex; }
-    .fs-chip {
-        font-size: 11px; line-height: 1.6; border-radius: 999px; padding: 2px 9px;
-        background: #f4f5f7; color: #5a6472;
-    }
-    .fs-chip.type { background: #fdecee; color: #E60012; font-weight: 600; }
-
     /* ================= 选择设备弹层：分组快捷条 + 多选 + 全选/清空 ================= */
     /* 折线图不要栏间距：格子中心正好等于曲线的 x 坐标 */
     .chart-bars.line-mode { gap: 0; }
@@ -793,9 +784,6 @@
             <button class="period-tab" data-period="week" onclick="switchPeriod('week')">周报</button>
             <button class="period-tab" data-period="month" onclick="switchPeriod('month')">月报</button>
         </div>
-
-        <!-- 已保存的筛选标签（类型 / 分组）：保存后显示 -->
-        <div class="fs-chips" id="filterSummary"></div>
 
     </div>
 
@@ -1927,7 +1915,6 @@ function render() {
 
     screen.innerHTML = html.join('');
     bindTableDrag();
-    paintSelectionChips();      /* 顶部标签：类型 / 台数（与所选设备保持同步） */
 }
 
 /* 点柱子 / 数据点：钉住气泡（移动端没有 hover）；点空白处收起
@@ -2279,20 +2266,6 @@ function doDeleteGroup() {
 }
 
 
-/* 顶部标签：已选设备涉及的类型 + 台数（与某个分组完全一致时显示分组名） */
-function paintSelectionChips() {
-    const box = document.getElementById('filterSummary');
-    if (!box) return;
-    const ids = selIds();
-    const types = [];
-    ids.forEach(id => {
-        const m = MACHINES.filter(x => x.id === id)[0];
-        if (m && types.indexOf(m.type) < 0) types.push(m.type);
-    });
-    box.innerHTML = types.map(t => '<span class="fs-chip type">' + t + '</span>').join('')
-        + '<span class="fs-chip">' + ids.length + ' 台设备</span>';
-    box.classList.add('on');
-}
 
 /* ==================== 日期选择：滚轮（年 / 月 / 周期区间） ==================== */
 const WHEEL_H = 44;                     /* 单行高度，与 CSS .wheel-item 一致 */
