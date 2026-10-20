@@ -1236,18 +1236,13 @@ document.addEventListener('click', function () {
 });
 
 /* y 轴刻度文案：按数量级决定小数位，避免刻度串行 */
-/* 小时数 → 「H:MM」：工时一律按「时:分」显示，避免 1.5 这种小数（25.4h = 25:24） */
+/* 小时数 → 十进制小时（保留 2 位小数，如 25.40），统一用 x.xx 表达时长 */
 function hm(v) {
     if (v === null || v === undefined || isNaN(v)) return '--';
-    const neg = v < 0;
-    const total = Math.round(Math.abs(v) * 60);
-    const h = Math.floor(total / 60);
-    const m = total % 60;
-    return (neg ? '-' : '') + h + ':' + String(m).padStart(2, '0');
+    return (v < 0 ? '-' : '') + Math.abs(v).toFixed(2);
 }
 
-/* 图表里的工时数值：十进制小时（13.3 / 5）—— 不用「时:分」，
-   否则 1:18 这种容易被误读成时刻；明细表 / 指标卡仍按「时:分」显示保留精度 */
+/* 图表里的工时数值同样用十进制小时（13.30 / 5.00），与指标卡、明细表口径一致 */
 function h1(v) {
     if (v === null || v === undefined || isNaN(v)) return '--';
     return Math.round(v) === v ? String(v) : fmt(v, 1);
