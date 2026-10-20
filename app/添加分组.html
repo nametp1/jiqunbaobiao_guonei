@@ -105,7 +105,7 @@
     .dev-main { flex: 1; min-width: 0; }
     .dev-name { display: block; font-size: 13.5px; font-weight: 600; color: #161a2e; }
     .dev.on .dev-name { color: #E60012; }
-    .dev-meta { display: block; margin-top: 4px; font-size: 12px; letter-spacing: .4px; color: #8b90a0; }
+    .dev-meta { display: block; margin-top: 3px; font-size: 12px; letter-spacing: 0; color: #8b90a0; }
     .dev-check {
         flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%;
         border: 1.5px solid #dfe2e8; color: #fff;
@@ -234,8 +234,8 @@ function renderDevices() {
         '<label class="dev' + (picked[m.id] ? ' on' : '') + '">'
         + '<input type="checkbox"' + (picked[m.id] ? ' checked' : '')
         + ' data-id="' + m.id + '" onchange="toggle(this)">'
-        + '<span class="dev-main"><span class="dev-name">' + m.name + '</span>'
-        + '<span class="dev-meta">编号：' + m.model + '</span></span>'
+        + '<span class="dev-main"><span class="dev-name">' + m.model + '</span>'
+        + '<span class="dev-meta">' + m.name + '</span></span>'
         + '<span class="dev-check">' + CHECK_SVG + '</span></label>'
     ).join('') : '<div class="dev-empty">该类型下暂无设备</div>';
 }

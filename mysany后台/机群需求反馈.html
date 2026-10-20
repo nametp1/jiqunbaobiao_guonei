@@ -406,6 +406,11 @@
         .opt-row input:focus, .opt-row select:focus, .opt-row textarea:focus { border-color: #29BECE; outline: none; }
         .opt-name { width: 160px; flex-shrink: 0; }
         /* 标签类型固定为「可申请」：不再用下拉，改只读胶囊 */
+        .opt-status {
+            width: 110px; flex-shrink: 0; height: 34px; padding: 0 8px; font-family: inherit;
+            font-size: 13px; color: #333; background: #fff; border: 1px solid #d9d9d9; border-radius: 6px; cursor: pointer;
+        }
+        .opt-status:focus { border-color: #29BECE; outline: none; }
         .opt-tag {
             width: 66px;
             flex-shrink: 0;
@@ -1091,7 +1096,8 @@ function confirmStatusChange() {
 // ====================================================================
 const OPT_KEY = 'mysany_more_report_options';
 // 标签文案：候选项一律「可申请」（「已规划」状态 2026-09-24 按用户要求删除；历史数据自动归为「可申请」）
-const OPT_TAG_TEXT = { apply: '可申请' };
+const OPT_TAG_TEXT = { apply: '可申请', planned: '已规划' };
+const OPT_STATUS_OPTIONS = [{ v: 'apply', t: '可申请' }, { v: 'planned', t: '已规划' }];
 // 内置默认清单：本地还没有配置时作为初始内容（name / desc 按语言存放，image = 预览图 dataURL）
 const DEFAULT_REPORT_OPTIONS = [
     { tagType: 'apply', name: { 'zh-CN': '超时工作报表', en: 'Overtime Work Report' },
@@ -1181,7 +1187,11 @@ function renderOptRows() {
                 + '<span class="opt-idx">' + (i + 1) + '</span>'
                 + imgCell
                 + '<input class="opt-name" value="' + escAttr(o.name[optLang] || '') + '" placeholder="报表名称" oninput="optChange(' + i + ',\'name\',this.value)">'
-                + '<span class="opt-tag">' + OPT_TAG_TEXT.apply + '</span>'
+                + '<select class="opt-status" onchange="optChange(' + i + ',\'tagType\',this.value)">'
+                + OPT_STATUS_OPTIONS.map(function (op) {
+                    return '<option value="' + op.v + '"' + ((o.tagType || 'apply') === op.v ? ' selected' : '') + '>' + op.t + '</option>';
+                }).join('')
+                + '</select>'
                 + '<textarea class="opt-desc" placeholder="一句话描述（可留空）" oninput="optChange(' + i + ',\'desc\',this.value)">' + esc(o.desc[optLang] || '') + '</textarea>'
                 + '<button class="opt-del" title="删除该候选项" onclick="optDelRow(' + i + ')">✕</button>'
                 + '</div>';
@@ -1292,7 +1302,7 @@ function optSaveAll() {
         });
         list.push({
             id: item.id,
-            tagType: 'apply',
+            tagType: item.tagType || 'apply',
             image: item.image || '',
             name: name,
             desc: desc

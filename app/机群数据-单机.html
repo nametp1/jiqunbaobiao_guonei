@@ -514,7 +514,7 @@
     /* 副行：设备型号（同型号多台时靠上方的客户自定义编号区分） */
     /* 副行（设备编号 / 型号）：字号调大 + 字距拉开，读起来更长更清楚 */
     .picker-model .pm-sub {
-        margin-top: 4px; font-size: 13px; font-weight: 500; letter-spacing: .8px; color: #8b90a0;
+        margin-top: 3px; font-size: 12.5px; font-weight: 400; letter-spacing: 0; color: #8b90a0;
     }
     .picker-model .pm-check { flex-shrink: 0; color: #E60012; display: none; }
     .picker-model.active .pm-name { color: #E60012; }
@@ -1915,8 +1915,8 @@ function renderMachinePicker() {
     modelsEl.innerHTML = list.length ? list.map(m =>
         '<div class="picker-model' + (m.id === state.machineId ? ' active' : '') + '"'
         + ' onclick="chooseMachine(\'' + m.id + '\')">'
-        + '<div class="pm-main"><div class="pm-name">' + m.name + '</div>'
-        + '<div class="pm-sub">编号：' + m.model + '</div></div>'
+        + '<div class="pm-main"><div class="pm-name">' + m.model + '</div>'
+        + '<div class="pm-sub">' + m.name + '</div></div>'
         + '<span class="pm-check"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"'
         + ' stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">'
         + '<polyline points="20 6 9 17 4 12"/></svg></span></div>'

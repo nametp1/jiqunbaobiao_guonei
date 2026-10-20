@@ -447,7 +447,6 @@ html.embed .dash-title { display: none; }   /* 嵌入预览时报表名由宿主
     padding: 14px 16px;
     background: #fff;
     border: 1px solid #eceef2;
-    border-top: 4px solid var(--sany-red);
     border-radius: 8px;
     box-shadow: 0 1px 2px rgba(22,26,46,.04);
 }
@@ -1860,8 +1859,8 @@ html.embed .dash { max-width: none; padding: 0; }
         var rows = gpDevList().filter(function (d) { return d.pg === gpType; });
         document.getElementById('gpDevs').innerHTML = rows.length ? rows.map(function (d) {
             return '<div class="gp-dev' + (gpSel[d.no] ? ' on' : '') + '" data-no="' + d.no + '">' +
-                '<span class="gp-main"><span class="gp-no">' + d.name + '</span>' +
-                '<span class="gp-nm">型号：' + (d.model || '—') + '</span></span>' +
+                '<span class="gp-main"><span class="gp-no">' + d.no + '</span>' +
+                '<span class="gp-nm">' + d.name + '</span></span>' +
                 '<span class="gp-check">✓</span></div>';
         }).join('') : '<div class="gp-empty">该产品组下暂无设备</div>';
     }

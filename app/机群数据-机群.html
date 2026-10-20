@@ -608,7 +608,7 @@
     /* 副行：设备型号（同型号多台时靠上方的客户自定义编号区分） */
     /* 副行（设备编号 / 型号）：字号调大 + 字距拉开，读起来更长更清楚 */
     .picker-model .pm-sub {
-        margin-top: 4px; font-size: 13px; font-weight: 500; letter-spacing: .8px; color: #8b90a0;
+        margin-top: 3px; font-size: 12.5px; font-weight: 400; letter-spacing: 0; color: #8b90a0;
     }
     .picker-empty { padding: 40px 16px; text-align: center; font-size: 12px; color: #b0b4bd; }
 
@@ -1080,6 +1080,14 @@ const FLEET_PLAN = [
     { type: '宽体自卸车', prefix: 'WT', label: '自卸车', models: ['SKT105E', 'SKT90E'], count: 25 },
     { type: '汽车起重机', prefix: 'CR', label: '起重机', models: ['STC250T'], count: 15 }
 ];
+/* 设备编号后 5 位随机（页面内唯一，避免呈现成自增序列） */
+const USED_NO = new Set();
+function randomDeviceNo() {
+    let s;
+    do { s = String(Math.floor(10000 + Math.random() * 90000)); } while (USED_NO.has(s));
+    USED_NO.add(s);
+    return s;
+}
 const DEVICE_TYPES = FLEET_PLAN.map((p, ti) => ({
     type: p.type,
     models: Array.from({ length: p.count }, (_, i) => {
@@ -1088,7 +1096,7 @@ const DEVICE_TYPES = FLEET_PLAN.map((p, ti) => ({
         const model = p.models[i % p.models.length];
         return {
             id: p.prefix + String(i + 1).padStart(3, '0'),
-            no: model + '-' + String(i + 1).padStart(5, '0'),
+            no: model + '-' + randomDeviceNo(),
             name: '长沙' + p.label + (i + 1) + '号',
             model: model,
             seed: (i + 1) * 7 + ti * 13
@@ -2031,8 +2039,8 @@ function renderMachinePicker() {
     modelsEl.innerHTML = list.length ? list.map(m =>
         '<div class="picker-model' + (pickerSel.indexOf(m.id) >= 0 ? ' selected' : '') + '"'
         + ' onclick="togglePick(&quot;' + m.id + '&quot;)">'
-        + '<div class="pm-main"><div class="pm-name">' + m.name + '</div>'
-        + '<div class="pm-sub">型号：' + m.model + '</div></div>'
+        + '<div class="pm-main"><div class="pm-name">' + m.no + '</div>'
+        + '<div class="pm-sub">' + m.name + '</div></div>'
         + '<span class="pm-box">' + BOX_CHECK + '</span></div>'
     ).join('') : '<div class="picker-empty">该类型下暂无设备</div>';
 
