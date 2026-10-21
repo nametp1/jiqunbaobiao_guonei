@@ -859,6 +859,12 @@
     <div class="confirm-dialog opt-dialog">
         <div class="confirm-title opt-title">
             <span>配置「我需要更多报表」候选报表</span>
+            <span class="opt-lang">语言
+                <select id="optLangSel" onchange="optSwitchLang(this.value)">
+                    <option value="zh-CN">中文</option>
+                    <option value="en">English</option>
+                </select>
+            </span>
         </div>
         <div class="opt-body" id="optBody"></div>
         <input type="file" id="optFile" accept="image/*" style="display:none">
@@ -1161,8 +1167,26 @@ function openOptionManager() {
     const saved = readOptionsConfig();
     optDraft = (saved.length ? saved : DEFAULT_REPORT_OPTIONS).map(normOption);
     optLang = 'zh-CN';
+    const langSel = document.getElementById('optLangSel');
+    if (langSel) langSel.value = optLang;
     renderOptRows();
     document.getElementById('optModal').classList.add('show');
+}
+
+/* 切换候选报表的编辑语言（中英）：未配置的语言从简体中文复制一份 */
+function optSwitchLang(lang) {
+    const next = lang || 'zh-CN';
+    if (next === optLang) return;
+    if (optDraft) {
+        optDraft.forEach(function (o) {
+            if (!o.name) o.name = {};
+            if (!o.desc) o.desc = {};
+            if (!String(o.name[next] || '').trim()) o.name[next] = o.name['zh-CN'] || '';
+            if (!String(o.desc[next] || '').trim()) o.desc[next] = o.desc['zh-CN'] || '';
+        });
+    }
+    optLang = next;
+    renderOptRows();
 }
 
 function closeOptionManager() {
@@ -1325,5 +1349,80 @@ document.addEventListener('keydown', function (e) {
 init();
 </script>
 
+
+<script>
+/* ==================== 中英文切换（2026-10-21） ====================
+   切到英文：翻译页面内文本与 placeholder / title；切回中文：刷新页面恢复原文 */
+(function () {
+    var DICT = {"管理后台": "Admin Console", "机群报表订阅": "Fleet Reports", "机群报表配置": "Report Templates", "机群需求反馈": "Report Requests", "状态": "Status", "全部": "All", "待评估": "Pending Review", "已排期": "Scheduled", "已上线": "Launched", "暂不实现": "Not Planned", "提交人": "Submitter", "用户ID": "User ID", "报表名称": "Report Name", "搜索": "Search", "重置筛选": "Reset", "累计提交": "Total Requests", "＋ 添加候选报表": "+ Add Candidate Report", "申请的报表": "Requested Reports", "自定义诉求": "Custom Request", "提交时间": "Submitted At", "操作": "Actions", "确认变更状态": "Confirm Status Change", "确定要变更该需求的状态吗？": "Change the status of this request?", "确认变更": "Confirm", "取消": "Cancel", "配置「我需要更多报表」候选报表": "Configure \"More Reports\" Candidates", "＋ 添加一项": "+ Add Item", "保存配置": "Save", "可申请": "Available", "已规划": "Planned", "预览图": "Thumbnail", "删除": "Delete", "关闭": "Close", "共": "Total", "个模版": "templates", "条": "records", "项": "selected", "个变量": "vars", "机群报表订阅 /": "Fleet Reports /", "全部适用范围": "All Scopes", "已选": "Selected", "筛选后": "filtered", "个": ""};
+    var PATTERNS = [["共 (\\d+) 条", "$1 records"], ["已上线为终态，不可再变更", "Launched is final and cannot be changed"]];
+    var KEY = 'mysany_lang';
+    var lang = 'zh';
+    try { lang = localStorage.getItem(KEY) || 'zh'; } catch (e) { }
+
+    function tr(s) {
+        if (!s) return s;
+        var t = s.trim();
+        if (!t) return s;
+        if (DICT[t]) return s.replace(t, DICT[t]);
+        for (var i = 0; i < PATTERNS.length; i++) {
+            var m = t.match(PATTERNS[i][0]);
+            if (m) return s.replace(t, t.replace(PATTERNS[i][0], PATTERNS[i][1]));
+        }
+        return s;
+    }
+
+    function walk(root) {
+        if (!root) return;
+        var tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+        var nodes = [];
+        while (tw.nextNode()) nodes.push(tw.currentNode);
+        nodes.forEach(function (n) {
+            if (n.parentNode && /^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName)) return;
+            var v = tr(n.nodeValue);
+            if (v !== n.nodeValue) n.nodeValue = v;
+        });
+        root.querySelectorAll('[placeholder],[title]').forEach(function (el) {
+            ['placeholder', 'title'].forEach(function (a) {
+                if (el.hasAttribute(a)) {
+                    var v = tr(el.getAttribute(a));
+                    if (v !== el.getAttribute(a)) el.setAttribute(a, v);
+                }
+            });
+        });
+    }
+
+    function addSwitch() {
+        var host = document.querySelector('.navbar-right') || document.querySelector('.topbar-nav') || document.querySelector('.topbar');
+        if (!host) return;
+        var b = document.createElement('span');
+        b.textContent = lang === 'en' ? '中文' : 'EN';
+        b.title = lang === 'en' ? '切换为中文' : 'Switch to English';
+        b.style.cssText = 'cursor:pointer;font-weight:600;padding:4px 10px;border-radius:6px;' +
+            'border:1px solid #e3e5ea;background:#fff;font-size:13px;color:#333;margin-left:8px;';
+        b.onclick = function () {
+            try { localStorage.setItem(KEY, lang === 'en' ? 'zh' : 'en'); } catch (e) { }
+            location.reload();
+        };
+        host.appendChild(b);
+    }
+
+    function run() {
+        addSwitch();
+        if (lang !== 'en') return;
+        document.documentElement.setAttribute('lang', 'en');
+        walk(document.body);
+        /* 动态渲染的内容（表格、弹窗）翻译后再补一次 */
+        var timer = null;
+        new MutationObserver(function () {
+            clearTimeout(timer);
+            timer = setTimeout(function () { walk(document.body); }, 120);
+        }).observe(document.body, { childList: true, subtree: true });
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+    else run();
+})();
+</script>
 </body>
 </html>

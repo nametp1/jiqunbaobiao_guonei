@@ -89,13 +89,6 @@ body {
 .dash-meta { font-size: 12px; color: #8b90a0; }
 /* 页头左侧（返回 + 标题）与右侧（切换器 + 元信息） */
 .dash-head .dh-left, .dash-head .dh-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.dh-back {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 30px; height: 30px; flex-shrink: 0;
-    font-size: 16px; line-height: 1; color: #5a6472; background: #fff; border: 1px solid #e3e5ea;
-    border-radius: 6px; text-decoration: none; transition: all .15s;
-}
-.dh-back:hover { color: var(--sany-red); border-color: #f6a8ae; }
 .dh-pick { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #8b90a0; }
 .dh-pick select {
     height: 28px; padding: 0 8px; max-width: 220px;
@@ -104,8 +97,7 @@ body {
 }
 .dh-pick select:focus { outline: none; border-color: var(--sany-red); }
 /* 嵌入预览（?embed=1）时宿主页面已有返回入口，自己的返回按钮隐藏 */
-html.embed .dh-back { display: none; }
-html.embed .dash-title { display: none; }   /* 嵌入预览时报表名由宿主页显示，避免重复 */
+html.embedhtml.embed .dash-title { display: none; }   /* 嵌入预览时报表名由宿主页显示，避免重复 */
 /* ---------- 卡片栅格（原 .main 由 A4 竖排改为 4 列仪表盘栅格）---------- */
 .main {
     display: grid;
@@ -697,80 +689,16 @@ html.embed .dash { max-width: none; padding: 0; }
 </head>
 <body>
 <div class="app-wrapper">
-        <nav class="navbar">
-        <div class="navbar-left">
-            <span class="logo">MySANY</span>
-        </div>
-        <div class="navbar-right">
-            <div class="navbar-item" title="个人中心">
-                <span>Schuck</span>
-                <div class="navbar-avatar"></div>
-            </div>
-        </div>
-    </nav>
+        
     <div class="main-wrapper">
-                <aside class="sidebar">
-            <ul class="sidebar-menu">
-                <li class="sidebar-item">
-                    <a class="sidebar-link">
-                        <span class="sidebar-icon">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
-                        </span>
-                        设备管理
-                    </a>
-                </li>
-                <li class="sidebar-item">
-                    <a class="sidebar-link">
-                        <span class="sidebar-icon">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
-                        </span>
-                        数据大屏
-                    </a>
-                </li>
-                <li class="sidebar-item active">
-                    <a class="sidebar-link active" href="报表模版.html">
-                        <span class="sidebar-icon">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><path d="M3 9h18"></path><path d="M9 21V9"></path></svg>
-                        </span>
-                        机群报表
-                    </a>
-                </li>
-                <li class="sidebar-item">
-                    <a class="sidebar-link">
-                        <span class="sidebar-icon">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-                        </span>
-                        项目管理
-                    </a>
-                    <ul class="sidebar-submenu">
-                        <li class="sidebar-item"><a class="sidebar-link" href="javascript:;">项目管理</a></li>
-                    </ul>
-                </li>
-                <li class="sidebar-item">
-                    <a class="sidebar-link">
-                        <span class="sidebar-icon">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                        </span>
-                        设备保养
-                    </a>
-                </li>
-                <li class="sidebar-item">
-                    <a class="sidebar-link">
-                        <span class="sidebar-icon">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-                        </span>
-                        维修管理
-                    </a>
-                </li>
-            </ul>
-        </aside>
+                
         <main class="main-content">
 <div class="dash">
 
     <!-- 页头（仪表盘式）：原 A4 报表头（SANY 字标 / 元信息条 / 双线）与页脚已按需求删除 -->
     <div class="dash-head">
         <div class="dh-left">
-            <a class="dh-back" href="报表模版.html" title="返回报表列表" aria-label="返回报表列表">‹</a>
+            
             <span class="dash-title" id="repName">设备综合报表</span><span class="dash-scope fleet">机群</span>
         </div>
         <div class="dh-share">

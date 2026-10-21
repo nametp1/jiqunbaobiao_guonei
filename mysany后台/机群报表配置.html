@@ -106,7 +106,16 @@
             display: flex; align-items: flex-end; gap: 12px; padding: 16px 20px;
             flex-wrap: wrap;
         }
-        .filter-item { display: flex; flex-direction: column; gap: 4px; }
+        /* 语言下拉选择框（与列表 / 弹窗同款） */
+        .lang-select-wrap { margin-bottom: 20px; }
+        .lang-select-wrap select { width: 100%; height: 34px; border: 1px solid #d9d9d9; border-radius: 6px; padding: 0 10px; font-size: 13px; color: #333; background: #fff; cursor: pointer; }
+        .lang-select-wrap select:focus { border-color: #29BECE; outline: none; box-shadow: 0 0 0 2px rgba(41,190,206,0.1); }
+        .lang-select-wrap .lang-hint { font-size: 11px; color: #999; margin-top: 4px; }
+        .lang-cell { white-space: nowrap; }
+        .lang-tag { display: inline-block; padding: 1px 8px; border-radius: 10px; background: #eef6f8; color: #24839B; font-size: 11px; margin-right: 4px; }
+        .lang-tag.missing { background: #fafafa; color: #bbb; border: 1px dashed #d9d9d9; }
+
+        /* 语言标签组 */ display: flex; flex-direction: column; gap: 4px; }
         .filter-item label { font-size: 12px; color: #666; font-weight: 500; }
         .filter-item input, .filter-item select {
             height: 34px; border: 1px solid #d9d9d9; border-radius: 6px; padding: 0 12px; font-size: 13px; outline: none; transition: border-color 0.2s;
@@ -1040,6 +1049,14 @@
                         <option value="机群">机群</option>
                     </select>
                 </div>
+                <div class="filter-item">
+                    <label>语言类型</label>
+                    <select id="filter-lang" onchange="renderTemplateTable()">
+                        <option value="">全部语言</option>
+                        <option value="zh-CN">中文</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
                 <div class="filter-actions">
                     <button class="filter-btn primary" onclick="filterTemplates()">搜索</button>
                     <button class="filter-btn" onclick="clearFilters()">重置</button>
@@ -1052,7 +1069,7 @@
                 <div class="table-card-header"><h3>模版列表</h3><span style="font-size:12px;color:#999" id="tpl-count">共 5 个模版</span></div>
                 <div style="overflow-x:auto;">
                     <table>
-                        <thead><tr><th style="width:50px;">图标</th><th>模版名称</th><th>模版描述</th><th>适用范围</th><th>启用</th><th>最近更新</th><th>操作</th></tr></thead>
+                        <thead><tr><th style="width:50px;">图标</th><th>模版名称</th><th>模版描述</th><th>适用范围</th><th style="width:120px;">语言</th><th>启用</th><th>最近更新</th><th>操作</th></tr></thead>
                         <tbody id="template-table-body"></tbody>
                     </table>
                 </div>
@@ -1081,6 +1098,13 @@
                     </div>
                     <input type="file" id="iconFile" accept="image/*" style="display:none" onchange="onIconPicked(this)">
                 </div>
+            </div>
+
+            <!-- 编辑语言（与下方模版名称 / 描述联动，每次仅编辑一种语言） -->
+            <label style="font-size:13px;color:#666;font-weight:500;display:block;margin-bottom:6px;">编辑语言</label>
+            <div class="lang-select-wrap">
+                <select id="edit-lang-select" onchange="switchEditLang(this.value)"></select>
+                <div class="lang-hint">切换语言后将自动保存当前编辑内容，未配置的语言将从简体中文复制</div>
             </div>
 
             <!-- 基本信息分两行：① 模版名称 / 模版描述 ② 启用开关 / 整体口径 -->
@@ -1377,51 +1401,59 @@ const templates = [
     {
         id: 0, machineTypes: ['单机', '机群'], enabled: true, updatedAt: '2026-07-17 08:00', icon: TPL_ICONS.daily,
         translations: {
-            'zh-CN': { name: '设备运行日报模版', description: '适用于单台设备每日运行数据汇报', attachmentFileName: '{{模版名称}}_{{发送日期}}' }
+            'zh-CN': { name: '设备运行日报模版', description: '适用于单台设备每日运行数据汇报', attachmentFileName: '{{模版名称}}_{{发送日期}}' },
+            'en': { name: 'Equipment Daily Operation Template', description: 'Daily operation data report for a single machine', attachmentFileName: '{{模版名称}}_{{发送日期}}' }
         }
     },
     {
         id: 1, machineTypes: ['单机', '机群'], enabled: true, updatedAt: '2026-07-17 08:30', icon: TPL_ICONS.weekly,
         translations: {
-            'zh-CN': { name: '设备运行周报模版', description: '适用于单台设备每周运行数据汇总汇报', attachmentFileName: '{{模版名称}}_{{发送日期}}' }
+            'zh-CN': { name: '设备运行周报模版', description: '适用于单台设备每周运行数据汇总汇报', attachmentFileName: '{{模版名称}}_{{发送日期}}' },
+            'en': { name: 'Equipment Weekly Operation Template', description: 'Weekly operation data summary for a single machine', attachmentFileName: '{{模版名称}}_{{发送日期}}' }
         }
     },
     {
         id: 2, machineTypes: ['单机', '机群'], enabled: true, updatedAt: '2026-07-18 09:00', icon: TPL_ICONS.monthly,
         translations: {
-            'zh-CN': { name: '设备运行月报模版', description: '适用于机群设备每月运行数据汇总汇报', attachmentFileName: '{{模版名称}}_{{发送日期}}' }
+            'zh-CN': { name: '设备运行月报模版', description: '适用于机群设备每月运行数据汇总汇报', attachmentFileName: '{{模版名称}}_{{发送日期}}' },
+            'en': { name: 'Equipment Monthly Operation Template', description: 'Monthly operation data summary for a fleet', attachmentFileName: '{{模版名称}}_{{发送日期}}' }
         }
     },
     {
         id: 3, machineTypes: ['单机', '机群'], enabled: true, updatedAt: '2026-07-19 10:15', icon: TPL_ICONS.alert,
         translations: {
-            'zh-CN': { name: '设备异常告警通知模版', description: '设备发生异常时自动发送告警通知', attachmentFileName: '异常告警_{{发送日期}}' }
+            'zh-CN': { name: '设备异常告警通知模版', description: '设备发生异常时自动发送告警通知', attachmentFileName: '异常告警_{{发送日期}}' },
+            'en': { name: 'Equipment Alert Notification Template', description: 'Automatically send an alert when a machine abnormality occurs', attachmentFileName: '异常告警_{{发送日期}}' }
         }
     },
     {
         id: 4, machineTypes: ['单机', '机群'], enabled: false, updatedAt: '2026-07-20 14:20', icon: TPL_ICONS.offline,
         translations: {
-            'zh-CN': { name: '设备离线提醒模版', description: '设备离线超过阈值时自动发送提醒', attachmentFileName: '离线提醒_{{发送日期}}' }
+            'zh-CN': { name: '设备离线提醒模版', description: '设备离线超过阈值时自动发送提醒', attachmentFileName: '离线提醒_{{发送日期}}' },
+            'en': { name: 'Equipment Offline Reminder Template', description: 'Send a reminder when a machine stays offline beyond the threshold', attachmentFileName: '离线提醒_{{发送日期}}' }
         }
     },
     {
         id: 5, machineTypes: ['单机', '机群'], enabled: true, updatedAt: '2026-07-21 16:00', icon: TPL_ICONS.energy,
         translations: {
-            'zh-CN': { name: '能耗分析月报模版', description: '单台设备月度能耗油耗分析报表', attachmentFileName: '能耗月报_{{发送日期}}' }
+            'zh-CN': { name: '能耗分析月报模版', description: '单台设备月度能耗油耗分析报表', attachmentFileName: '能耗月报_{{发送日期}}' },
+            'en': { name: 'Energy Consumption Monthly Template', description: 'Monthly energy and fuel consumption analysis for a single machine', attachmentFileName: '能耗月报_{{发送日期}}' }
         }
     },
     {
         id: 6, machineTypes: ['单机', '机群'],
         enabled: true, updatedAt: '2026-09-14 09:20', icon: TPL_ICONS.monthly,
         translations: {
-            'zh-CN': { name: '项目生产日报模版（按行程）', description: '按项目统计行程明细与产出，PDF 正文内嵌核心指标', attachmentFileName: '{{模版名称}}_{{项目名称}}_{{发送日期}}' }
+            'zh-CN': { name: '项目生产日报模版（按行程）', description: '按项目统计行程明细与产出，PDF 正文内嵌核心指标', attachmentFileName: '{{模版名称}}_{{项目名称}}_{{发送日期}}' },
+            'en': { name: 'Project Daily Production Template (by trip)', description: 'Trip details and output by project, with key metrics embedded', attachmentFileName: '{{模版名称}}_{{项目名称}}_{{发送日期}}' }
         }
     },
     {
         id: 7, machineTypes: ['单机', '机群'],
         enabled: false, updatedAt: '2026-09-14 09:35', icon: TPL_ICONS.daily,
         translations: {
-            'zh-CN': { name: '项目能耗周报模版', description: '按项目汇总能耗与单位运输能耗，周报推送', attachmentFileName: '项目能耗_{{发送日期}}' }
+            'zh-CN': { name: '项目能耗周报模版', description: '按项目汇总能耗与单位运输能耗，周报推送', attachmentFileName: '项目能耗_{{发送日期}}' },
+            'en': { name: 'Project Energy Weekly Template', description: 'Energy consumption and unit transport energy by project, pushed weekly', attachmentFileName: '项目能耗_{{发送日期}}' }
         }
     }
 ];
@@ -1441,6 +1473,19 @@ function hasLang(tplId, lang) {
 function getConfiguredLangs(tplId) {
     return Object.keys(templates[tplId].translations);
 }
+/* 支持的编辑语言（国内版仅中英） */
+const LANGS = [{ code: 'zh-CN', label: '中文' }, { code: 'en', label: 'English' }];
+function langLabel(code) {
+    const l = LANGS.filter(x => x.code === code)[0];
+    return l ? l.label : code;
+}
+function langTagsHtml(t) {
+    const has = Object.keys(t.translations || {});
+    return LANGS.map(function (l) {
+        const on = has.indexOf(l.code) >= 0;
+        return '<span class="lang-tag' + (on ? '' : ' missing') + '">' + l.label + '</span>';
+    }).join(' ');
+}
 function nowStr() {
     return new Date().toISOString().replace('T', ' ').slice(0, 16);
 }
@@ -1449,12 +1494,14 @@ function nowStr() {
 function renderTemplateTable() {
     const nameQ = (document.getElementById('filter-name').value || '').trim().toLowerCase();
     const scopeQ = (document.getElementById('filter-scope') || {}).value || '';
+    const langQ = (document.getElementById('filter-lang') || {}).value || '';
 
     const filtered = templates.filter((t, i) => {
         const zhTr = t.translations['zh-CN'] || {};
         const name = (zhTr.name || '').toLowerCase();
         if (nameQ && !name.includes(nameQ)) return false;
         if (scopeQ && getTypes(t).indexOf(scopeQ) < 0) return false;
+        if (langQ && Object.keys(t.translations || {}).indexOf(langQ) < 0) return false;
         return true;
     });
 
@@ -1464,7 +1511,7 @@ function renderTemplateTable() {
     document.getElementById('tpl-count').textContent = '共 ' + totalCount + ' 个模版' + (shownCount < totalCount ? '（筛选后 ' + shownCount + ' 个）' : '');
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#bbb;padding:40px 0;">无匹配模版</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#bbb;padding:40px 0;">无匹配模版</td></tr>';
         return;
     }
 
@@ -1478,6 +1525,7 @@ function renderTemplateTable() {
             <td><strong>${zhTr.name || '(未命名)'}</strong></td>
             <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${zhTr.description || ''}</td>
             <td class="scope-cell">${scopeTagsHtml(getTypes(t))}</td>
+            <td class="lang-cell">${langTagsHtml(t)}</td>
             <td><span class="tag ${t.enabled ? 'tag-green' : 'tag-gray'}">${t.enabled ? '已启用' : '已停用'}</span></td>
             <td>${t.updatedAt}</td>
             <td><span class="operate-links">
@@ -1504,6 +1552,8 @@ function clearFilters() {
     document.getElementById('filter-name').value = '';
     const scopeEl = document.getElementById('filter-scope');
     if (scopeEl) scopeEl.value = '';
+    const langEl = document.getElementById('filter-lang');
+    if (langEl) langEl.value = '';
     renderTemplateTable();
 }
 
@@ -1511,7 +1561,7 @@ function clearFilters() {
 function openEditModal(index, isNew) {
     currentTemplateId = index;
     addFlow = !!isNew;   // 新建入口 = 新增流程（保存不关弹窗、提示「添加成功」）
-    currentEditLang = 'zh-CN';   /* 2026-10-18：去掉「编辑语言」后固定编辑简体中文 */
+    currentEditLang = (getConfiguredLangs(index)[0]) || 'zh-CN';   /* 默认编辑已配置的第一个语言 */
     iconDraft = null;            /* 图标草稿重置为「未改动」 */
 
     // 清空表格构建器缓存并重置到第 1 步（XLSX/CSV 附件）
@@ -1522,6 +1572,7 @@ function openEditModal(index, isNew) {
     attColLoaded = false;
     pdfColLoaded = false;
     document.getElementById('edit-modal').classList.add('show');
+    initLangSelect();
     loadEditForm(isNew);
     renderIconPreview();
     // 首次定位不落库（noSave），避免空表单 / 未加载的附件区把已存配置覆盖掉
@@ -1529,6 +1580,30 @@ function openEditModal(index, isNew) {
     // 打开后自动定位到顶部（模版名称区域）
     scrollEditModalTop();
     [60, 200].forEach(ms => setTimeout(scrollEditModalTop, ms));
+}
+
+// 编辑语言下拉：中英两项，跟随 currentEditLang
+function initLangSelect() {
+    const sel = document.getElementById('edit-lang-select');
+    if (!sel) return;
+    sel.innerHTML = LANGS.map(l => `<option value="${l.code}">${l.label}</option>`).join('');
+    sel.value = currentEditLang;
+}
+
+// 切换编辑语言：先保存当前语言内容，再切到目标语言（未配置则从简体中文复制）
+function switchEditLang(lang) {
+    if (!lang || lang === currentEditLang) return;
+    saveEditToState();
+    const t = templates[currentTemplateId];
+    if (!t.translations[lang]) {
+        const zh = t.translations['zh-CN'] || { name: '', description: '', attachmentFileName: '' };
+        t.translations[lang] = { name: zh.name, description: zh.description, attachmentFileName: zh.attachmentFileName };
+    }
+    currentEditLang = lang;
+    initLangSelect();
+    loadEditForm(false);
+    renderTemplateTable();
+    scrollEditModalTop();
 }
 
 // 把编辑弹窗的滚动容器拉回顶部（新增 / 编辑 / 切换语言 / 切换步骤后调用）
@@ -2855,7 +2930,8 @@ function refreshWizard() {
     const next = document.getElementById('wzNextBtn');
     const save = document.getElementById('wzSaveBtn');
     const s = editWizardStep;
-    if (prev) prev.style.display = s > 1 ? '' : 'none';
+    /* 第 1 步（XLSX / CSV 附件）是首步，不提供「上一步」 */
+    if (prev) prev.style.display = s > 2 ? '' : 'none';
     if (next) {
         next.style.display = s < 3 ? '' : 'none';
         next.textContent = '下一步：报表版式';
@@ -4217,5 +4293,80 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 
 // ==================== 初始化 ====================
 renderTemplateTable();</script>
+
+<script>
+/* ==================== 中英文切换（2026-10-21） ====================
+   切到英文：翻译页面内文本与 placeholder / title；切回中文：刷新页面恢复原文 */
+(function () {
+    var DICT = {"管理后台": "Admin Console", "机群报表订阅": "Fleet Reports", "机群报表配置": "Report Templates", "机群需求反馈": "Report Requests", "+ 新建模版": "+ New Template", "模版名称": "Template Name", "模版描述": "Description", "适用范围": "Scope", "全部适用范围": "All Scopes", "单机": "Single", "机群": "Fleet", "搜索": "Search", "重置": "Reset", "模版列表": "Templates", "图标": "Icon", "启用": "Status", "最近更新": "Last Updated", "操作": "Actions", "编辑模版": "Edit Template", "新建模版": "New Template", "模版图标": "Template Icon", "上传图标": "Upload Icon", "移除": "Remove", "启用此模版": "Enable this template", "已启用": "Enabled", "已停用": "Disabled", "整体口径": "Report Scope", "单机设备": "Single Machine", "机群（聚合）": "Fleet (Aggregated)", "统计时间维度": "Time Dimensions", "日报": "Daily", "周报": "Weekly", "月报": "Monthly", "文件名模板": "File Name Pattern", "XLSX / CSV 附件": "XLSX / CSV Attachment", "报表版式": "Report Layout", "数据列配置": "Column Mapping", "列名": "Column", "模板变量": "Variable", "+ 添加列": "+ Add Column", "设备类型": "Equipment Type", "物模型": "Model", "字段（可多选）": "Fields (multi-select)", "取消全选": "Clear All", "全选当前模型": "Select All", "未配置": "Not configured", "已配置": "Configured", "组件参数配置": "Component Settings", "选择指标（单选）": "Select Metric", "确定": "OK", "取消": "Cancel", "删除": "Delete", "编辑": "Edit", "上一步": "Back", "完成并保存": "Save", "选择映射字段": "Select Field", "确认选择": "Confirm", "组件标题": "Component Title", "可视化类型": "Chart Type", "指标绑定": "Metrics", "宽度占比": "Width", "段落内容": "Paragraph", "预览": "Preview", "保存": "Save", "关闭": "Close", "共": "Total", "个模版": "templates", "条": "records", "项": "selected", "个变量": "vars", "机群报表订阅 /": "Fleet Reports /", "已选": "Selected", "筛选后": "filtered", "个": "", "模版名称 / 描述": "Name / Description"};
+    var PATTERNS = [["共 (\\d+) 个模版", "$1 templates"], ["（筛选后 (\\d+) 个）", "($1 filtered)"], ["已选：(\\d+)", "Selected: $1"], ["(\\d+) 个变量", "$1 vars"], ["已选 (\\d+) 项", "$1 selected"], ["下一步：报表版式", "Next: Report Layout"]];
+    var KEY = 'mysany_lang';
+    var lang = 'zh';
+    try { lang = localStorage.getItem(KEY) || 'zh'; } catch (e) { }
+
+    function tr(s) {
+        if (!s) return s;
+        var t = s.trim();
+        if (!t) return s;
+        if (DICT[t]) return s.replace(t, DICT[t]);
+        for (var i = 0; i < PATTERNS.length; i++) {
+            var m = t.match(PATTERNS[i][0]);
+            if (m) return s.replace(t, t.replace(PATTERNS[i][0], PATTERNS[i][1]));
+        }
+        return s;
+    }
+
+    function walk(root) {
+        if (!root) return;
+        var tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+        var nodes = [];
+        while (tw.nextNode()) nodes.push(tw.currentNode);
+        nodes.forEach(function (n) {
+            if (n.parentNode && /^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName)) return;
+            var v = tr(n.nodeValue);
+            if (v !== n.nodeValue) n.nodeValue = v;
+        });
+        root.querySelectorAll('[placeholder],[title]').forEach(function (el) {
+            ['placeholder', 'title'].forEach(function (a) {
+                if (el.hasAttribute(a)) {
+                    var v = tr(el.getAttribute(a));
+                    if (v !== el.getAttribute(a)) el.setAttribute(a, v);
+                }
+            });
+        });
+    }
+
+    function addSwitch() {
+        var host = document.querySelector('.navbar-right') || document.querySelector('.topbar-nav') || document.querySelector('.topbar');
+        if (!host) return;
+        var b = document.createElement('span');
+        b.textContent = lang === 'en' ? '中文' : 'EN';
+        b.title = lang === 'en' ? '切换为中文' : 'Switch to English';
+        b.style.cssText = 'cursor:pointer;font-weight:600;padding:4px 10px;border-radius:6px;' +
+            'border:1px solid #e3e5ea;background:#fff;font-size:13px;color:#333;margin-left:8px;';
+        b.onclick = function () {
+            try { localStorage.setItem(KEY, lang === 'en' ? 'zh' : 'en'); } catch (e) { }
+            location.reload();
+        };
+        host.appendChild(b);
+    }
+
+    function run() {
+        addSwitch();
+        if (lang !== 'en') return;
+        document.documentElement.setAttribute('lang', 'en');
+        walk(document.body);
+        /* 动态渲染的内容（表格、弹窗）翻译后再补一次 */
+        var timer = null;
+        new MutationObserver(function () {
+            clearTimeout(timer);
+            timer = setTimeout(function () { walk(document.body); }, 120);
+        }).observe(document.body, { childList: true, subtree: true });
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+    else run();
+})();
+</script>
 </body>
 </html>

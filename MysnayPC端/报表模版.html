@@ -1967,7 +1967,8 @@
             /* 2026-10-18：点报表直接跳到对应的图表报表模版页（不再页内 iframe 预览），
                并把报表名带过去，模版页标题会显示点开的那张报表 */
             const file = (rep.scope === '机群') ? '机群图表报表模版.html' : '单机图表报表模版.html';
-            location.href = file + '?report=' + encodeURIComponent(rep.name);
+            /* 报表模版点卡片：用浏览器新窗口打开图表报表页 */
+            window.open(file + '?report=' + encodeURIComponent(rep.name), '_blank');
         });
 
         // ====================================================================
@@ -2610,6 +2611,81 @@
             </main>
         </div>
     </div>
+
+<script>
+/* ==================== 中英文切换（2026-10-21） ====================
+   切到英文：翻译页面内文本与 placeholder / title；切回中文：刷新页面恢复原文 */
+(function () {
+    var DICT = {"设备管理": "Devices", "数据大屏": "Dashboards", "机群报表": "Fleet Reports", "项目管理": "Projects", "设备保养": "Maintenance", "维修管理": "Repairs", "我需要更多报表": "Request More Reports", "仅看单机": "Single", "仅看机群": "Fleet", "搜索报表": "Search reports", "加载中...": "Loading...", "报表预览": "Report Preview", "正在加载预览...": "Loading preview...", "关闭": "Close", "候选报表（可多选）": "Candidate Reports (multi-select)", "自定义诉求说明": "Your Requirement", "取消": "Cancel", "提交": "Submit", "正在开发": "In Development", "网格视图": "Grid view", "列表视图": "List view", "未找到匹配的报表": "No matching reports", "跳过指引": "Skip tour", "上一步": "Back", "下一步": "Next", "共": "Total", "个模版": "templates", "条": "records", "项": "selected", "个变量": "vars", "机群报表订阅 /": "Fleet Reports /", "全部适用范围": "All Scopes", "已选": "Selected", "筛选后": "filtered", "个": ""};
+    var PATTERNS = [["已选 (\\d+) 项", "$1 selected"], ["共 (\\d+) 条", "$1 records"], ["共 (\\d+) 个", "$1"]];
+    var KEY = 'mysany_lang';
+    var lang = 'zh';
+    try { lang = localStorage.getItem(KEY) || 'zh'; } catch (e) { }
+
+    function tr(s) {
+        if (!s) return s;
+        var t = s.trim();
+        if (!t) return s;
+        if (DICT[t]) return s.replace(t, DICT[t]);
+        for (var i = 0; i < PATTERNS.length; i++) {
+            var m = t.match(PATTERNS[i][0]);
+            if (m) return s.replace(t, t.replace(PATTERNS[i][0], PATTERNS[i][1]));
+        }
+        return s;
+    }
+
+    function walk(root) {
+        if (!root) return;
+        var tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+        var nodes = [];
+        while (tw.nextNode()) nodes.push(tw.currentNode);
+        nodes.forEach(function (n) {
+            if (n.parentNode && /^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName)) return;
+            var v = tr(n.nodeValue);
+            if (v !== n.nodeValue) n.nodeValue = v;
+        });
+        root.querySelectorAll('[placeholder],[title]').forEach(function (el) {
+            ['placeholder', 'title'].forEach(function (a) {
+                if (el.hasAttribute(a)) {
+                    var v = tr(el.getAttribute(a));
+                    if (v !== el.getAttribute(a)) el.setAttribute(a, v);
+                }
+            });
+        });
+    }
+
+    function addSwitch() {
+        var host = document.querySelector('.navbar-right') || document.querySelector('.topbar-nav') || document.querySelector('.topbar');
+        if (!host) return;
+        var b = document.createElement('span');
+        b.textContent = lang === 'en' ? '中文' : 'EN';
+        b.title = lang === 'en' ? '切换为中文' : 'Switch to English';
+        b.style.cssText = 'cursor:pointer;font-weight:600;padding:4px 10px;border-radius:6px;' +
+            'border:1px solid #e3e5ea;background:#fff;font-size:13px;color:#333;margin-left:8px;';
+        b.onclick = function () {
+            try { localStorage.setItem(KEY, lang === 'en' ? 'zh' : 'en'); } catch (e) { }
+            location.reload();
+        };
+        host.appendChild(b);
+    }
+
+    function run() {
+        addSwitch();
+        if (lang !== 'en') return;
+        document.documentElement.setAttribute('lang', 'en');
+        walk(document.body);
+        /* 动态渲染的内容（表格、弹窗）翻译后再补一次 */
+        var timer = null;
+        new MutationObserver(function () {
+            clearTimeout(timer);
+            timer = setTimeout(function () { walk(document.body); }, 120);
+        }).observe(document.body, { childList: true, subtree: true });
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+    else run();
+})();
+</script>
 </body>
 </html>
 
