@@ -8,7 +8,7 @@
 /* ============================================================================
    图表性质报表 · 单机 / 机群 共用版式（版式基准 = 同目录 单机报表模版.html）
    本页 = 以「图表」为主体的报告：指标卡 / 折线图 / 柱状图 / 环形图（不含数据明细表）
-   规则出处：V2/组件规则说明.html（五类组件规格）+ PRDv2.0（组件 × 口径上限）
+   规则出处：海外版-V2/组件规则说明.html（五类组件规格）+ PRDv2.0（组件 × 口径上限）
 
    ① 口径差异（唯一差异，其余全部相同）：
       单机口径 —— 折线：多指标 ≤5 且必须同单位；圆柱：多指标 ≤5 同单位；环形：多指标 ≤5 同单位构成比例
@@ -414,15 +414,42 @@ html.embedhtml.embed .dash-title { display: none; }   /* 嵌入预览时报表�
 .page-load.fail .pl-desc { color: #8b90a0; }
 
 /* 卡片视图切换：图表 / 明细（2026-10-19，与 App 一致） */
-.view-switch { display: inline-flex; margin-left: auto; background: #f4f5f7; border-radius: 6px; padding: 2px; }
+.view-switch {
+    display: inline-flex; margin-left: auto; background: #f4f5f7; border-radius: 6px; padding: 2px;
+    width: 120px; flex: 0 0 auto; box-sizing: border-box;
+}
 .view-switch .vs {
-    height: 22px; padding: 0 10px; font-family: inherit; font-size: 12px; color: #5a6472;
+    flex: 1 1 0; width: 50%; min-width: 0; padding: 0; margin: 0; box-sizing: border-box;
+    height: 24px; font-family: inherit; font-size: 12px; color: #5a6472; text-align: center;
     background: none; border: none; border-radius: 4px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
 }
 .view-switch .vs.on { background: #fff; color: var(--sany-red); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
 .chart-detail { display: none; }
-.section.detail-mode .chart-wrap { display: none; }
-.section.detail-mode .chart-detail { display: block; }
+/* 明细分页：容器高度 = 图表高度（JS 写入 height），表体滚动 + 底部分页条 */
+.section.detail-mode .chart-detail { display: flex; flex-direction: column; }
+.detail-scroll { flex: 1 1 auto; overflow: auto; }
+/* 分页条：左「起-止 / 共 N 条」，右 ‹ 页码 ›（与 App 一致，当前页用 PC 主色） */
+.detail-pager {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding-top: 10px;
+}
+.detail-pager .pg-range { font-size: 12.5px; color: #6b7280; font-variant-numeric: tabular-nums; }
+.detail-pager .pg-pages { display: inline-flex; align-items: center; gap: 8px; }
+.detail-pager .pg-btn {
+    min-width: 32px; height: 32px; padding: 0 8px; border-radius: 10px;
+    border: 1px solid #e6e8ee; background: #fff; color: #4b5563;
+    font-size: 13px; font-family: inherit; line-height: 1; cursor: pointer;
+    font-variant-numeric: tabular-nums; transition: border-color .15s, color .15s, background .15s;
+}
+.detail-pager .pg-btn:hover:not(:disabled):not(.on) { border-color: #c9ced8; color: #161a2e; }
+.detail-pager .pg-btn.on {
+    background: #161a2e; border-color: #161a2e; color: #fff; font-weight: 600;
+    box-shadow: 0 1px 3px rgba(22,26,46,.22);
+}
+.detail-pager .pg-btn:disabled { color: #c8ccd6; border-color: #eef0f3; background: #fbfcfd; cursor: default; }
+.detail-pager .pg-gap { padding: 0 2px; font-size: 12.5px; color: #9aa3b2; }
+.section.detail-mode .chart-wrap, .section.detail-mode .hbar-wrap { display: none; }
 .chart-detail table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .chart-detail th, .chart-detail td { padding: 7px 10px; border-bottom: 1px solid #f0f1f4; text-align: left; }
 .chart-detail th { font-weight: 600; color: #5a6472; background: #fafbfc; }
@@ -1331,7 +1358,7 @@ html.embed .dash { max-width: none; padding: 0; }
                 + '<td class="num">' + ratio.toFixed(1) + '%</td></tr>';
         }).join('');
         html += '<tr class="sum-row"><td colspan="3"><b>合计</b></td><td class="num"><b>' + fmt(totE, 0) + '</b></td><td class="num"><b>' + fmt(totH, 1) + '</b></td><td class="num"><b>100.0%</b></td></tr>';
-        document.getElementById('detailBody').innerHTML = html;
+        setDetailRows(html);
     }
 
     /* ---------- 表头排序：重绘后行会重建，所以每次排序都现查 tbody / 合计行 ---------- */
@@ -1374,6 +1401,164 @@ html.embed .dash { max-width: none; padding: 0; }
     /* ==================== 卡片视图切换：图表 / 明细（2026-10-19） ====================
        · 只有图表类卡片带切换；切换不重新拉数，明细表用当前窗口数据即时计算
        · 明细表结构与 App 明细一致：首列类目 + 各指标列（数值居中） */
+    /* -------------------- 底部「数据明细」整表分页（按可用高度算每页行数） -------------------- */
+    var DT_ALL = [];        /* 当前全量行 HTML */
+    var DT_PAGE = 1;
+
+    function detailTablePerPage() {
+        var tb = document.getElementById('detailBody');
+        var tr = tb ? tb.querySelector('tr') : null;
+        var rowH = tr ? tr.offsetHeight : 34;
+        if (!rowH) rowH = 34;
+        var avail = Math.max(240, Math.min(window.innerHeight * 0.5, 640));
+        var n = Math.max(5, Math.floor((avail - 40) / rowH));
+        if (DT_ALL.length > 1) n = Math.min(n, DT_ALL.length - 1);   /* 演示：至少两页 */
+        return n;
+    }
+
+    function paintDetailTable() {
+        var tb = document.getElementById('detailBody');
+        if (!tb) return;
+        var per = detailTablePerPage();
+        var pages = Math.max(1, Math.ceil(DT_ALL.length / per));
+        DT_PAGE = Math.min(Math.max(1, DT_PAGE), pages);
+        tb.innerHTML = DT_ALL.slice((DT_PAGE - 1) * per, DT_PAGE * per).join('');
+
+        var table = tb.closest('table');
+        var pager = document.getElementById('detailTablePager');
+        if (!pager && table) {
+            pager = document.createElement('div');
+            pager.id = 'detailTablePager';
+            pager.className = 'detail-pager';
+            table.parentNode.insertBefore(pager, table.nextSibling);
+        }
+        if (pager) {
+            pager.innerHTML = pages > 1 ? (function () {
+                var from = (DT_PAGE - 1) * per + 1;
+                var to = Math.min(DT_PAGE * per, DT_ALL.length);
+                var nums = [1, pages];
+                for (var n = DT_PAGE - 1; n <= DT_PAGE + 1; n++) if (n >= 1 && n <= pages) nums.push(n);
+                var uniq = nums.filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (a, b) { return a - b; });
+                var btn = function (label, p, on, dis) {
+                    return '<button type="button" class="pg-btn' + (on ? ' on' : '') + '"' + (dis ? ' disabled' : '')
+                        + ' onclick="detailTableGo(' + p + ')">' + label + '</button>';
+                };
+                var win = uniq.map(function (n2, i) {
+                    return (i && n2 - uniq[i - 1] > 1 ? '<span class="pg-gap">…</span>' : '') + btn(n2, n2, n2 === DT_PAGE, false);
+                }).join('');
+                return '<span class="pg-range">共 ' + DT_ALL.length + ' 条</span>'
+                    + '<span class="pg-pages">' + btn('‹', DT_PAGE - 1, false, DT_PAGE === 1) + win
+                    + btn('›', DT_PAGE + 1, false, DT_PAGE === pages) + '</span>';
+            })() : '';
+        }
+    }
+
+    /* 渲染入口：把整表 HTML 收进 DT_ALL 后分页显示 */
+    function setDetailRows(html) {
+        var tmp = document.createElement('table');
+        tmp.innerHTML = '<tbody>' + html + '</tbody>';
+        DT_ALL = Array.prototype.slice.call(tmp.querySelectorAll('tbody tr')).map(function (tr) { return tr.outerHTML; });
+        DT_PAGE = 1;
+        paintDetailTable();
+    }
+
+    window.detailTableGo = function (p) { DT_PAGE = p; paintDetailTable(); };
+    window.addEventListener('resize', function () { setTimeout(paintDetailTable, 180); });
+
+    /* -------------------- 明细分页（按组件高度自适应每页行数） -------------------- */
+    /* 图表高度预缓存：图表模式下量一次，切到明细后用作容器高度 */
+    function cacheChartHeights() {
+        Array.prototype.forEach.call(document.querySelectorAll('.view-switch[data-kind]'), function (sw) {
+            var kind = sw.getAttribute('data-kind');
+            var sec = sw.closest('.section');
+            var box = document.querySelector('.chart-detail[data-detail="' + kind + '"]');
+            if (!sec || !box) return;
+            var wasDetail = sec.classList.contains('detail-mode');
+            if (wasDetail) sec.classList.remove('detail-mode');
+            var wrap = sec.querySelector('.chart-wrap, .hbar-wrap');
+            var h = wrap ? wrap.offsetHeight : 0;
+            if (wasDetail) sec.classList.add('detail-mode');
+            if (h > 0) box.dataset.availH = String(h);
+        });
+    }
+
+    /* 实时测量某卡片「图表模式」下的高度（临时切回图表再量，避免切到明细后量不到） */
+    function measureChartHeight(sec) {
+        var wasDetail = sec.classList.contains('detail-mode');
+        if (wasDetail) sec.classList.remove('detail-mode');
+        var wrap = sec.querySelector('.chart-wrap');
+        var h = wrap ? wrap.offsetHeight : 0;
+        if (wasDetail) sec.classList.add('detail-mode');
+        return h;
+    }
+
+    var DETAIL_PAGE = {};          /* kind -> 当前页码 */
+    var DETAIL_DATA = {};          /* kind -> {head, rows} */
+
+    /* 分页条：左「起-止 / 共 N 条」，右 ‹ 页码 ›（页码窗口：首末页 + 当前页 ±1，其余省略号） */
+    function pagerHtml(kind, page, pages, per, total) {
+        if (pages <= 1) return '';
+        var from = (page - 1) * per + 1;
+        var to = Math.min(page * per, total);
+        var nums = [1, pages];
+        for (var n = page - 1; n <= page + 1; n++) if (n >= 1 && n <= pages) nums.push(n);
+        var uniq = nums.filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (a, b) { return a - b; });
+        var btn = function (label, p, on, dis) {
+            return '<button type="button" class="pg-btn' + (on ? ' on' : '') + '"' + (dis ? ' disabled' : '')
+                + ' onclick="detailGoPage(\'' + kind + '\',' + p + ')">' + label + '</button>';
+        };
+        var win = uniq.map(function (n2, i) {
+            return (i && n2 - uniq[i - 1] > 1 ? '<span class="pg-gap">…</span>' : '') + btn(n2, n2, n2 === page, false);
+        }).join('');
+        return '<div class="detail-pager">'
+            + '<span class="pg-range">共 ' + total + ' 条</span>'
+            + '<span class="pg-pages">' + btn('‹', page - 1, false, page === 1) + win
+            + btn('›', page + 1, false, page === pages) + '</span>'
+            + '</div>';
+    }
+
+    /* 根据容器高度计算每页行数：可用高度 = 容器高 - 表头高 - 分页条高 */
+    function detailRowsPerPage(box, availH, total) {
+        var thead = box.querySelector('.detail-scroll thead');
+        var tr = box.querySelector('.detail-scroll tbody tr');
+        var headH = thead ? thead.offsetHeight : 34;
+        var rowH = tr ? tr.offsetHeight : 32;
+        if (!rowH) rowH = 32;
+        var pagerH = 40;
+        var n = Math.floor((availH - headH - pagerH) / rowH);
+        n = Math.max(3, n);
+        /* 演示需要：数据条数 > 1 时，每页至少留 1 条到下一页（保证出现第二页） */
+        if (total && total > 1) n = Math.min(n, total - 1);
+        return n;
+    }
+
+    function paintDetail(kind, keepPage) {
+        var box = document.querySelector('.chart-detail[data-detail="' + kind + '"]');
+        var d = DETAIL_DATA[kind];
+        if (!box || !d) return;
+        var sec = box.closest('.section');
+        var availH = measureChartHeight(sec) || parseFloat(box.dataset.availH || '0') || 0;
+        if (availH > 0) box.dataset.availH = String(availH);
+        var per = detailRowsPerPage(box, availH || 320, d.rows.length);
+        var pages = Math.max(1, Math.ceil(d.rows.length / per));
+        var page = keepPage ? (DETAIL_PAGE[kind] || 1) : 1;
+        page = Math.min(Math.max(1, page), pages);
+        DETAIL_PAGE[kind] = page;
+
+        var slice = d.rows.slice((page - 1) * per, page * per);
+        box.innerHTML = '<div class="detail-scroll">' + cardDetailHtml(d.head, slice, d.rows.slice(0, 0)) + '</div>'
+            + pagerHtml(kind, page, pages, per, d.rows.length);
+        box.style.height = (availH > 0 ? availH : 320) + 'px';   /* 与图表等高，切换不跳动 */
+    }
+
+    /* 暴露到全局：分页按钮是内联 onclick，需从闭包导出 */
+    window.detailGoPage = function (kind, page) { detailGoPage(kind, page); };
+
+    function detailGoPage(kind, page) {
+        DETAIL_PAGE[kind] = page;
+        paintDetail(kind, true);
+    }
+
     function cardDetailHtml(head, rows) {
         var th = head.map(function (h, i) { return '<th class="' + (i ? 'num' : '') + '">' + h + '</th>'; }).join('');
         var tr = rows.map(function (r) {
@@ -1390,10 +1575,31 @@ html.embed .dash { max-width: none; padding: 0; }
             b.classList.toggle('on', b.getAttribute('data-v') === view);
         });
         if (view === 'detail') {
+            /* 容器高度取「图表模式」时缓存的值；缺失则按 320 兜底 */
+            if (!box.dataset.availH) cacheChartHeights();
             var d = cardDetailData(kind);
-            if (d) box.innerHTML = cardDetailHtml(d.head, d.rows);
+            if (d) {
+                DETAIL_DATA[kind] = d;
+                DETAIL_PAGE[kind] = 1;
+                paintDetail(kind, false);
+            }
         }
     }
+    /* 窗口尺寸变化：重算每页行数（保持当前页） */
+    var _pagerTimer = null;
+    function resizeDetailPages() {
+        Object.keys(DETAIL_DATA).forEach(function (k) {
+            var box = document.querySelector('.chart-detail[data-detail="' + k + '"]');
+            if (box && box.closest('.section').classList.contains('detail-mode')) {
+                paintDetail(k, true);
+            }
+        });
+    }
+    window.addEventListener('resize', function () {
+        clearTimeout(_pagerTimer);
+        _pagerTimer = setTimeout(resizeDetailPages, 150);
+    });
+
     document.addEventListener('click', function (e) {
         var b = e.target.closest('.view-switch .vs');
         if (!b) return;
@@ -1477,6 +1683,9 @@ html.embed .dash { max-width: none; padding: 0; }
         /* 页头：机群下拉跟随当前机群（名称与台数都已在选项里，不再单独显示元信息） */
         fillFleetPicker();                               /* 机群 / 分组 两种模式都要把下拉对齐 */
         syncToolbar();
+    /* init: 预缓存图表高度 */
+    setTimeout(cacheChartHeights, 60);
+    window.addEventListener('resize', function () { setTimeout(cacheChartHeights, 180); });
         syncPickers();                                   /* 选择器类型 / 起止值跟着维度与翻页走 */
     }
     function switchDim(dim) {

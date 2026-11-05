@@ -2172,7 +2172,7 @@
         // ====================================================================
         // 「我需要更多报表」诉求弹窗
         // ====================================================================
-        /* 2026-10-18：示例数据直接取 V2/报表意向收集配置.xlsx 的「简体中文」列（标题 + 内容） */
+        /* 2026-10-18：示例数据直接取 海外版-V2/报表意向收集配置.xlsx 的「简体中文」列（标题 + 内容） */
         const MORE_REPORT_OPTIONS = [
             { name: '自定义设备分组报表',
               desc: '可按需要自行选择设备建成分组，生成报表时按该分组内的设备汇总数据。' },
@@ -2193,7 +2193,7 @@
         ];
 
         // 2026-09-21 新增：候选报表可由后台「机群需求反馈」页配置
-        // 数据来源：localStorage['mysany_more_report_options']（与 V2/mysany后台V2/机群需求反馈.html 共用同一 key）
+        // 数据来源：localStorage['mysany_more_report_options']（与 海外版-V2/mysany后台V2/机群需求反馈.html 共用同一 key）
         // 无配置 / 配置异常时回落到上面的内置默认清单
         const REPORT_OPTIONS_KEY = 'mysany_more_report_options';
 
@@ -2341,7 +2341,7 @@
             setTimeout(closeMoreReportsModal, 1400);
         }
 
-        // 写入诉求（后台 V2/mysany后台V2/机群需求反馈.html 读取同一个 localStorage key）
+        // 写入诉求（后台 海外版-V2/mysany后台V2/机群需求反馈.html 读取同一个 localStorage key）
         function saveReportRequest(source, reports, note) {
             try {
                 const KEY = 'mysany_report_requests';

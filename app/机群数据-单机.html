@@ -610,21 +610,26 @@
     }
     .xls .list-head > .num { justify-content: flex-end; }
     /* 分页条：左＝当前区间/总数，右＝页码按钮（当前页深色实心，两端箭头到边界置灰） */
+    /* 分页条（与 App 设计稿一致：左「起-止 / 共 N 条」，右 ‹ 页码 ›；当前页用 PC 主色实心） */
     .xls-pager {
         display: flex; align-items: center; justify-content: space-between; gap: 10px;
-        padding: 10px 12px; background: #fff; border-top: 1px solid #f0f2f5;
+        padding: 12px 14px; background: #fff; border-top: 1px solid #f0f2f5;
     }
-    .xls-range { font-size: 12px; color: #6b7280; font-variant-numeric: tabular-nums; }
-    .xls-pages { display: inline-flex; align-items: center; gap: 6px; }
+    .xls-range { font-size: 12.5px; color: #6b7280; font-variant-numeric: tabular-nums; letter-spacing: .1px; }
+    .xls-pages { display: inline-flex; align-items: center; gap: 8px; }
     .pg-btn {
-        min-width: 28px; height: 28px; padding: 0 6px; border-radius: 7px;
-        font-family: inherit; font-size: 12px; line-height: 1; cursor: pointer;
-        background: #fff; color: #4b5563; border: 1px solid #e3e6ea; font-variant-numeric: tabular-nums;
+        min-width: 32px; height: 32px; padding: 0 8px; border-radius: 10px;
+        font-family: inherit; font-size: 13px; line-height: 1; cursor: pointer;
+        background: #fff; color: #4b5563; border: 1px solid #e6e8ee;
+        font-variant-numeric: tabular-nums; transition: border-color .15s, color .15s, background .15s;
     }
-    .pg-btn:hover:not(:disabled):not(.on) { border-color: #c9ced8; }
-    .pg-btn.on { background: #161a2e; border-color: #161a2e; color: #fff; font-weight: 600; }
-    .pg-btn:disabled { color: #c2c8d2; cursor: default; }
-    .pg-gap { padding: 0 2px; font-size: 12px; color: #9aa3b2; }
+    .pg-btn:hover:not(:disabled):not(.on) { border-color: #c9ced8; color: #161a2e; }
+    .pg-btn.on {
+        background: #161a2e; border-color: #161a2e; color: #fff; font-weight: 600;
+        box-shadow: 0 1px 3px rgba(22,26,46,.22);
+    }
+    .pg-btn:disabled { color: #c8ccd6; border-color: #eef0f3; cursor: default; background: #fbfcfd; }
+    .pg-gap { padding: 0 2px; font-size: 12.5px; color: #9aa3b2; }
 .pick-target { display: flex; gap: 8px; padding: 0 16px 8px; }
     .pick-target .pt-btn {
         flex: 1; height: 32px; border-radius: 16px; font-family: inherit; font-size: 13px;
@@ -1611,8 +1616,7 @@ function pagerHTML(key, page, pages, from, size, total) {
     const win = uniq.map((n, i) => (i && n - uniq[i - 1] > 1 ? '<span class="pg-gap">…</span>' : '')
         + btn(n, n, n === page, false));
     return '<div class="xls-pager">'
-        + '<span class="xls-range">' + (from + 1) + '-' + Math.min(from + size, total)
-        + ' / 共 ' + total + ' 条</span>'
+        + '<span class="xls-range">共 ' + total + ' 条</span>'
         + '<span class="xls-pages">' + btn('&#8249;', page - 1, false, page === 1)
         + win.join('') + btn('&#8250;', page + 1, false, page === pages)
         + '</span></div>';
